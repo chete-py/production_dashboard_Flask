@@ -8,7 +8,9 @@ app = Flask(__name__)
 
 def home():
     df = pd.read_csv('targets.csv')
-    return df
+    names = df['TM']
+    output = names.to_list()
+    return output
 
 
 if __name__ == '__main__':
