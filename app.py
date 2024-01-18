@@ -12,30 +12,34 @@ credentials = service_account.Credentials.from_service_account_file(credentials_
 gc = gspread.authorize(credentials)
 
 # Your Google Sheets URL
-url = "https://docs.google.com/spreadsheets/d/1yQXPZ4zdI8aiIzYXzzuAwDS1V_Zg0fWU6OaqZ_VmwB0/edit#gid=0"
+url_acc = "https://docs.google.com/spreadsheets/d/1yQXPZ4zdI8aiIzYXzzuAwDS1V_Zg0fWU6OaqZ_VmwB0/edit#gid=0"
+url_targ = "https://docs.google.com/spreadsheets/d/1yQXPZ4zdI8aiIzYXzzuAwDS1V_Zg0fWU6OaqZ_VmwB0/edit#gid=1885515628"
 
 # Open the Google Sheets spreadsheet
-worksheet_1 = gc.open_by_url(url).worksheet("accounts")
-worksheet_2 = gc.open_by_url(url).worksheet("targets")
+worksheet_accounts = gc.open_by_url(url_acc).worksheet("accounts")
+worksheet_targets = gc.open_by_url(url_targ).worksheet("targets")
 
-data = worksheet_1.get_all_values()
+data = worksheet_accounts.get_all_values()
     
 # Prepare data for Plotly
 headers = data[0]
 data = data[1:]
 newdf = pd.DataFrame(data, columns=headers)
+five_rows = newdf.head(5)
+TARGETS = five_rows.to_dict(orient='records')
+
 
 
 from flask import Flask, render_template
 
 app = Flask(__name__)
 
-df = pd.read_csv('targets.csv')
-data = df['MONTH'].to_list()
-newdf = df.dropna(subset='TOTAL')
-thedf = newdf.loc[newdf['MONTH'] == ' NOVEMBER ']
-names = thedf[['TM','TOTAL']]
-TARGETS = names.to_dict(orient='records')
+# df = pd.read_csv('targets.csv')
+# data = df['MONTH'].to_list()
+# newdf = df.dropna(subset='TOTAL')
+# thedf = newdf.loc[newdf['MONTH'] == ' NOVEMBER ']
+# names = thedf[['TM','TOTAL']]
+# TARGETS = names.to_dict(orient='records')
 
 print(newdf)
 
