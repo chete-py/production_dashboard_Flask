@@ -1,10 +1,18 @@
-from sqlalchemy import create_engine,text
+from dotenv import load_dotenv
+load_dotenv()
+import os
+import MySQLdb
 
-
-engine = create_engine("mysql+pymysql://:ztwr1k1ijs2pictfcrq7:pscale_pw_E476YzhtOvyYnJuYnvbahWah9k4xz9zhYD272bzbafm@aws.connect.psdb.cloud/dashboard?charset=utf8mb4")
-
-# with engine.connect() as conn:
-#     result = conn.execute(text("select * from accounts"))
-#     print(result.all())
-
-#connect_args= {"ssl":{/etc/ssl/certs/ca-certificates.crt}}
+connection = MySQLdb.connect(
+  host= os.getenv("DB_HOST"),
+  user=os.getenv("DB_USERNAME"),
+  passwd= os.getenv("DB_PASSWORD"),
+  db= os.getenv("DB_NAME"),
+  autocommit = True,
+  ssl_disabled=True,
+   ssl_mode = "VERIFY_IDENTITY",
+  sslca    = {
+    "ca": "/etc/ssl/cert.pem"
+  }
+)
+  
