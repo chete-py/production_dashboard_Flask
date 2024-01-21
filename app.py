@@ -1,6 +1,7 @@
 import pandas as pd
 import gspread
 from google.oauth2 import service_account
+import openpyxl
 
 # Define your Google Sheets credentials JSON file (replace with your own)
 credentials_path = 'keys.json'
@@ -29,25 +30,43 @@ five_rows = newdf.head(5)
 TARGETS = five_rows.to_dict(orient='records')
 
 
+  
 
-from flask import Flask, render_template
+
+from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
-# df = pd.read_csv('targets.csv')
-# data = df['MONTH'].to_list()
-# newdf = df.dropna(subset='TOTAL')
-# thedf = newdf.loc[newdf['MONTH'] == ' NOVEMBER ']
-# names = thedf[['TM','TOTAL']]
-# TARGETS = names.to_dict(orient='records')
-
-print(newdf)
 
 @app.route("/")
 
-def home():
- 
-    return render_template('home.html', targets=TARGETS)
+#def home(): 
+#     return render_template('home.html', targets=TARGETS)
+
+def index(): 
+     return render_template('form.html')
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return 'No file part'
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return 'No selected file'
+    
+    if file:
+        file_path = 'uploads/' + file.filename
+        file.save(file_path)
+        df = process_uploaded_file(file_path)
+        return render_template('home.html', data=df)
+
+def process_uploaded_file(file_path):
+    import pandas as pd
+    df = pd.read_excel(file_path)
+    return df
+
 
 
 if __name__ == '__main__':

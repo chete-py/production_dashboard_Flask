@@ -2,3 +2,4 @@ Flask
 Gunicorn
 Pandas
 Gspread
+openpyxl
