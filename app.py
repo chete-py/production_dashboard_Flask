@@ -31,6 +31,7 @@ TARGETS = five_rows.to_dict(orient='records')
 
 
   
+df = None
 
 
 from flask import Flask, render_template, request
@@ -39,15 +40,12 @@ app = Flask(__name__)
 
 
 @app.route("/")
-
-#def home(): 
-#     return render_template('home.html', targets=TARGETS)
-
 def index(): 
-     return render_template('form.html')
+    return render_template('form.html')
 
-@app.route('/upload', methods=['POST'])
-def upload_file():
+@app.route("/home", methods=['GET', 'POST'])
+def home():
+    global df
     if 'file' not in request.files:
         return 'No file part'
 
@@ -62,11 +60,16 @@ def upload_file():
         df = process_uploaded_file(file_path)
         return render_template('home.html', data=df, targets=TARGETS)
 
+
+@app.route("/tms")
+def tms():    
+    return render_template('tms.html', data=df, targets=TARGETS)
+
+
 def process_uploaded_file(file_path):
     import pandas as pd
     df = pd.read_excel(file_path)
     return df
-
 
 
 if __name__ == '__main__':
