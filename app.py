@@ -60,7 +60,7 @@ def upload_file():
         file_path = 'uploads/' + file.filename
         file.save(file_path)
         df = process_uploaded_file(file_path)
-        return render_template('home.html', data=df)
+        return render_template('home.html', data=df, targets=TARGETS)
 
 def process_uploaded_file(file_path):
     import pandas as pd
