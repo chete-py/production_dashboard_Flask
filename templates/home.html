@@ -50,7 +50,7 @@
                     <div class="card-body">
                       <h5 class="card-title">Month To Date</h5>
                       <h6 class="card-title">Production</h6>
-                      <p class="card-text">Amount: Ksh.</p>
+                      <p class="card-text">Amount: Ksh. {{month_gp|round}}</p>
                       <p class="card-text">Number of Policies: </p> 
                     </div>
                   </div>
@@ -60,7 +60,7 @@
                     <div class="card-body">
                       <h5 class="card-title">Month To Date</h5>
                       <h6 class="card-title">Receipted</h6>
-                      <p class="card-text">Amount: Ksh.</p>
+                      <p class="card-text">Amount: Ksh.{{month_receipted|round}}</p>
                       <p class="card-text">Number of Policies: </p>                      
                     </div>
                   </div>
@@ -70,7 +70,7 @@
                       <div class="card-body">
                         <h5 class="card-title">Month To Date</h5>
                         <h6 class="card-title">Cancelled</h6>
-                        <p class="card-text">Amount: Ksh.</p>
+                        <p class="card-text">Amount:{{month_credit|round}}</p>
                         <p class="card-text">Number of Policies: </p> 
                       </div>
                     </div>
@@ -82,7 +82,7 @@
                     <div class="card-body">
                       <h5 class="card-title">Week To Date</h5>
                       <h6 class="card-title">Production</h6>
-                      <p class="card-text">Amount: Ksh.</p>
+                      <p class="card-text">Amount: Ksh.{{week_gp|round}}</p>
                       <p class="card-text">Number of Policies: </p> 
                     </div>
                   </div>
@@ -92,7 +92,7 @@
                     <div class="card-body">
                       <h5 class="card-title">Week To Date</h5>
                       <h6 class="card-title">Receipted</h6>
-                      <p class="card-text">Amount: Ksh.</p>
+                      <p class="card-text">Amount: Ksh. {{week_receipted|round}}</p>
                       <p class="card-text">Number of Policies: </p> 
                     </div>
                   </div>
@@ -102,7 +102,7 @@
                       <div class="card-body">
                         <h5 class="card-title">Week To Date</h5>
                         <h6 class="card-title">Cancelled</h6>
-                        <p class="card-text">Amount: Ksh.</p>
+                        <p class="card-text">Amount: Ksh.{{week_credit|round}}</p>
                         <p class="card-text">Number of Policies: </p> 
                       </div>
                     </div>
@@ -112,23 +112,30 @@
 
         </div>
 
-        {{data}}
-
-
+        
 
         <div class="container">
             <table class="table">
                 <thead>
                     <tr>
+                        <th scope="col">TRANSACTION DATE</th>
+                        <th scope="col">BRANCH</th>
                         <th scope="col">TM</th>
                         <th scope="col">INTERMEDIARY</th>
+                        <th scope="col">GROSS PREMIUM</th>
+                        <th scope="col">RECEIPTS</th>
+                        
                     </tr>
                 </thead>
                 <tbody>
-                    {% for target in targets %}
+                    {% for row in data %}
                         <tr>
-                            <td>{{ target['NEW TM'] }}</td>
-                            <td>{{ target['INTERMEDIARY'] }}</td>
+                            <td>{{ row['TRANSACTION DATE'] }}</td>
+                            <td>{{ row['BRANCH'] }}</td>
+                            <td>{{ row['TM'] }}</td>
+                            <td>{{ row['INTERMEDIARY'] }}</td>
+                            <td>{{ row['GROSS PREMIUM'] }}</td>
+                            <td>{{ row['RECEIPTS'] }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>

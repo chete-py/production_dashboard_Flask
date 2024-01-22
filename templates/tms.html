@@ -112,29 +112,36 @@
 
         </div>
 
-        {{data}}
-
-
-
-        <div class="container">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th scope="col">TM</th>
-                        <th scope="col">INTERMEDIARY</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for target in targets %}
-                        <tr>
-                            <td>{{ target['NEW TM'] }}</td>
-                            <td>{{ target['INTERMEDIARY'] }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
         
+        
+        <div class="container">
+          <table class="table">
+              <thead>
+                  <tr>
+                      <th scope="col">TRANSACTION DATE</th>
+                      <th scope="col">BRANCH</th>
+                      <th scope="col">TM</th>
+                      <th scope="col">INTERMEDIARY</th>
+                      <th scope="col">GROSS PREMIUM</th>
+                      <th scope="col">RECEIPTS</th>
+                      
+                  </tr>
+              </thead>
+              <tbody>
+                  {% for row in data %}
+                      <tr>
+                          <td>{{ row['TRANSACTION DATE'] }}</td>
+                          <td>{{ row['BRANCH'] }}</td>
+                          <td>{{ row['NEW TM'] }}</td>
+                          <td>{{ row['INTERMEDIARY'] }}</td>
+                          <td>{{ row['GROSS PREMIUM'] }}</td>
+                          <td>{{ row['RECEIPTS'] }}</td>
+                      </tr>
+                  {% endfor %}
+              </tbody>
+          </table>
+      </div>
+      
 
     </body>
 </html>
