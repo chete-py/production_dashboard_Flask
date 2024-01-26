@@ -94,7 +94,7 @@ def tms():
 def process_uploaded_file(file_path):
     
     df = pd.read_excel(file_path, header=6)
-    df2 = df[["TRANSACTION DATE", "BRANCH", "INTERMEDIARY TYPE", "INTERMEDIARY", "PRODUCT", "PORTFOLIO MIX", "SALES TYPE", "STAMP DUTY", "SUM INSURED", "GROSS PREMIUM", "NET BALANCE", "RECEIPTS", "TM"]]  
+    df2 = df[["TRANSACTION DATE", "BRANCH", "INTERMEDIARY TYPE", "INTERMEDIARY", "PRODUCT", "PORTFOLIO MIX", "SALES TYPE", "STAMP DUTY", "SUM INSURED", "GROSS PREMIUM", "NET BALANCE", "RECEIPTS", "TM"]].copy()
     df2.loc[df2['INTERMEDIARY'] == 'GWOKA INSURANCE AGENCY', 'BRANCH'] = 'Head Office'
     # Convert the 'Date' column to datetime format
     df2['TRANSACTION DATE'] = pd.to_datetime(df2['TRANSACTION DATE'] , format='%m/%d/%Y')    
@@ -130,14 +130,14 @@ def process_uploaded_file(file_path):
     newdf = jointdf.dropna(subset='TRANSACTION DATE')
 
     # THIS MONTH
-    this_month = newdf[newdf['MONTH NAME'] == current_month_name]
+    this_month = newdf.loc[newdf['MONTH NAME'] == current_month_name].copy()
     month_gp = this_month['GROSS PREMIUM'].sum()   
     month_receipted = this_month['RECEIPTS'].sum()  
     month_credit = this_month['NET BALANCE'].sum()
  
     
     # Get transactions done in the current week
-    this_week = newdf[((newdf['TRANSACTION DATE']).dt.date >= start_of_week.date()) & ((newdf['TRANSACTION DATE']).dt.date <= end_of_week.date())].copy()
+    this_week = newdf.loc[((newdf['TRANSACTION DATE']).dt.date >= start_of_week.date()) & ((newdf['TRANSACTION DATE']).dt.date <= end_of_week.date())].copy()
     week_gp = this_week['GROSS PREMIUM'].sum()   
     week_receipted = this_week['RECEIPTS'].sum() 
     week_credit = this_week['NET BALANCE'].sum()
