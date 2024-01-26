@@ -1,7 +1,10 @@
 import pandas as pd
 import gspread
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 from google.oauth2 import service_account
 from datetime import timedelta
+import mpld3
 from flask import Flask, render_template, request, session, redirect, url_for
 
 app = Flask(__name__)
@@ -60,8 +63,8 @@ def home():
     file_path = session.get('uploaded_file_path', None)
 
     if file_path:
-        df, newdf, week_gp, week_receipted, week_credit, month_gp, month_receipted, month_credit = process_uploaded_file(file_path)
-        return render_template('home.html', data=df, week_gp=week_gp, week_receipted=week_receipted, week_credit=week_credit, month_gp=month_gp, month_receipted=month_receipted, month_credit=month_credit)
+        df,bar_df, image_base64, week_gp, week_receipted, week_credit, month_gp, month_receipted, month_credit, yp, yr, yc = process_uploaded_file(file_path)
+        return render_template('home.html', bar_df=bar_df, image_base64=image_base64, data=df, week_gp=week_gp, week_receipted=week_receipted, week_credit=week_credit, month_gp=month_gp, month_receipted=month_receipted, month_credit=month_credit, yp=yp, yc=yc, yr=yr)
     else:
         return 'No uploaded file found.'
 
@@ -127,8 +130,11 @@ def process_uploaded_file(file_path):
     jointdf.loc[jointdf['INTERMEDIARY'].str.contains('REIN', case=False, na=False), 'NEW TM'] = 'REINSURANCE'
     jointdf = jointdf[["TRANSACTION DATE", "BRANCH", "INTERMEDIARY TYPE", "INTERMEDIARY", "PRODUCT", "PORTFOLIO MIX", "SALES TYPE", "SUM INSURED", "GROSS PREMIUM", "NET BALANCE", "RECEIPTS", "NEW TM", "MONTH NAME", "DayOfWeek"]].copy()
     
-    newdf = jointdf.dropna(subset='TRANSACTION DATE')
+    newdf = jointdf.dropna(subset='TRANSACTION DATE').copy()
+    bar_df = newdf.groupby('MONTH NAME')['GROSS PREMIUM'].sum().reset_index()
 
+  
+    
     # THIS MONTH
     this_month = newdf.loc[newdf['MONTH NAME'] == current_month_name].copy()
     month_gp = this_month['GROSS PREMIUM'].sum()   
@@ -142,12 +148,74 @@ def process_uploaded_file(file_path):
     week_receipted = this_week['RECEIPTS'].sum() 
     week_credit = this_week['NET BALANCE'].sum()
 
+     # MOST RECENT (YESTERDAY)
+    most_recent_date = newdf[newdf['TRANSACTION DATE'] == newdf['TRANSACTION DATE'].max()].copy()
+    first_recent_date = most_recent_date.iloc[-1] # last date
+
+    friday_df = this_week[this_week['DayOfWeek'] == 'Friday']
+    friday = friday_df['GROSS PREMIUM'].sum()
+    friday_cancelled = friday_df[friday_df['GROSS PREMIUM'] < 0]['GROSS PREMIUM'].sum()
+    friday_receipts = friday_df[friday_df['RECEIPTS'] > 0]['RECEIPTS'].sum()
+    friday_credits = friday_df['NET BALANCE'].sum()
+    
+    saturday_df = this_week.loc[this_week['DayOfWeek'] == 'Saturday']
+    saturday = saturday_df['GROSS PREMIUM'].sum()
+    saturday_receipts = saturday_df[saturday_df['RECEIPTS'] > 0]['RECEIPTS'].sum()
+    saturday_credits = saturday_df['NET BALANCE'].sum()
+    saturday_cancelled = saturday_df[saturday_df['GROSS PREMIUM'] < 0]['GROSS PREMIUM'].sum()
+    
+    sunday_df = this_week.loc[this_week['DayOfWeek'] == 'Sunday']
+    sunday = sunday_df['GROSS PREMIUM'].sum()
+    sunday_receipts = sunday_df[sunday_df['RECEIPTS'] > 0]['RECEIPTS'].sum()
+    sunday_credits = sunday_df['NET BALANCE'].sum()
+    sunday_cancelled = sunday_df[sunday_df['GROSS PREMIUM'] < 0]['GROSS PREMIUM'].sum()
+
+   
+    if first_recent_date.iloc[0].weekday() == 4:
+        yesterday = friday
+        yesterday_receipts_total = friday_receipts
+        yesterday_credit_total = friday_credits
+        cancelled_yesterday = friday_cancelled
+        
+    elif first_recent_date.iloc[0].weekday() == 5:
+        yesterday = (friday + saturday)
+        yesterday_receipts_total = friday_receipts + saturday_receipts
+        yesterday_credit_total = (friday_credits + saturday_credits)
+        cancelled_yesterday = friday_cancelled + saturday_cancelled
+        
+    elif first_recent_date.iloc[0].weekday() == 6:
+        yesterday = (friday + saturday+ sunday)
+        yesterday_receipts_total = sunday_receipts
+        yesterday_credit_total = (friday_credits + saturday_credits + sunday_credits)
+        cancelled_yesterday = friday_cancelled + saturday_cancelled + sunday_cancelled
+        
+    else:
+        
+        yesterday = most_recent_date['GROSS PREMIUM'].sum()
+        yesterday_receipts_total = most_recent_date.loc[most_recent_date['RECEIPTS'] > 0, 'RECEIPTS'].sum()
+        yesterday_credit_total = most_recent_date.loc[most_recent_date['NET BALANCE'] > 0, 'NET BALANCE'].sum()
+        cancelled_yesterday = most_recent_date.loc[most_recent_date['GROSS PREMIUM'] < 0, 'GROSS PREMIUM'].sum()
+       
+
+    yp = "Ksh. {:,.0f}".format(yesterday)    
+    yr = "Ksh. {:,.0f}".format(yesterday_receipts_total)    
+    yc = "Ksh. {:,.0f}".format(yesterday_credit_total)  
+    
+
     unique_manager = newdf['NEW TM'].unique().tolist()
 
+    fig, ax = plt.subplots(figsize=(10,6))
+    ax.bar(bar_df['MONTH NAME'], bar_df['GROSS PREMIUM'], color='#00A550',)
+    ax.set_xlabel('Month')
+    ax.set_title('MONTHLY GROSS UNDERWRITTEN PREMIUM')
+   
+    # Convert the Matplotlib plot to HTML
+    image_base64 = mpld3.fig_to_html(fig)
+    
     session['unique_manager'] = unique_manager
     
     df = df2.to_dict(orient='records')
-    return df, newdf, week_gp, week_receipted, week_credit, month_gp, month_receipted, month_credit
+    return df, bar_df, image_base64, week_gp, week_receipted, week_credit, month_gp, month_receipted, month_credit, yp, yc, yr
 
 
 if __name__ == '__main__':
