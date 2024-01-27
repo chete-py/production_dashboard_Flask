@@ -3,3 +3,4 @@ Gunicorn
 Pandas
 Gspread
 openpyxl
+matplotlib
