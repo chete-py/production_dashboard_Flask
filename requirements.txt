@@ -4,3 +4,4 @@ Pandas
 Gspread
 openpyxl
 matplotlib
+mpld3
