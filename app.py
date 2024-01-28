@@ -1,7 +1,6 @@
 import pandas as pd
 import gspread
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 from google.oauth2 import service_account
 from datetime import timedelta
 import mpld3
@@ -137,16 +136,28 @@ def process_uploaded_file(file_path):
     
     # THIS MONTH
     this_month = newdf.loc[newdf['MONTH NAME'] == current_month_name].copy()
-    month_gp = this_month['GROSS PREMIUM'].sum()   
-    month_receipted = this_month['RECEIPTS'].sum()  
-    month_credit = this_month['NET BALANCE'].sum()
+    month_prem = this_month['GROSS PREMIUM'].sum()
+    month_gp = "Ksh. {:,.0f}".format(month_prem)
+   
+    month_recpt = this_month['RECEIPTS'].sum() 
+    month_receipted = "Ksh. {:,.0f}".format(month_recpt)
+ 
+    month_cr = this_month['NET BALANCE'].sum()
+    month_credit = "Ksh. {:,.0f}".format(month_cr)
+
  
     
     # Get transactions done in the current week
     this_week = newdf.loc[((newdf['TRANSACTION DATE']).dt.date >= start_of_week.date()) & ((newdf['TRANSACTION DATE']).dt.date <= end_of_week.date())].copy()
-    week_gp = this_week['GROSS PREMIUM'].sum()   
-    week_receipted = this_week['RECEIPTS'].sum() 
-    week_credit = this_week['NET BALANCE'].sum()
+    week_prem = this_week['GROSS PREMIUM'].sum() 
+    week_gp = "Ksh. {:,.0f}".format(week_prem)
+  
+    week_recpt = this_week['RECEIPTS'].sum()
+    week_receipted = "Ksh. {:,.0f}".format(week_recpt)
+ 
+    week_cr = this_week['NET BALANCE'].sum()
+    week_credit = "Ksh. {:,.0f}".format(week_cr)
+
 
      # MOST RECENT (YESTERDAY)
     most_recent_date = newdf[newdf['TRANSACTION DATE'] == newdf['TRANSACTION DATE'].max()].copy()
