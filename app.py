@@ -1,5 +1,6 @@
 import pandas as pd
 import gspread
+import sqlite3
 import matplotlib.pyplot as plt
 from google.oauth2 import service_account
 from datetime import timedelta
@@ -26,14 +27,53 @@ url_targ = "https://docs.google.com/spreadsheets/d/1yQXPZ4zdI8aiIzYXzzuAwDS1V_Zg
 
 # Open the Google Sheets spreadsheet
 worksheet_accounts = gc.open_by_url(url_acc).worksheet("accounts")
-worksheet_targets = gc.open_by_url(url_targ).worksheet("targets")  
+worksheet_targets = gc.open_by_url(url_targ).worksheet("targets") 
 
 
-df = None
+# cursor.execute("create TABLE users(employee_number integer primary key, email text, password VARCHAR, name text)")
 
-@app.route("/")
-def index(): 
-    return render_template('form.html')
+#employee_details = [(10001, 'francis@gmail.com', 'Password123', 'Francis Muruge'),
+                    # (10002, 'zak@gmail.com', 'Password123', 'Zakayo Chemiati'),
+                    # (10003, 'muriuki@gmail.com', 'Password123', 'Racheal Muriuki'),
+                    # (10004, 'collins@gmail.com', 'Password123', 'Collins Chetekei'),
+                    # (10005, 'beri@gmail.com', 'Password123', 'Beri Allan')
+                    #  ]
+
+#cursor.executemany("INSERT OR REPLACE into users values (?,?,?,?)", employee_details)
+
+#print db
+# for row in cursor.execute("select * from users"):
+#     print(row)
+
+#
+
+
+@app.route("/", methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+
+        # Establish connection to the database
+        connection = sqlite3.connect("dashboard.db")
+        cursor = connection.cursor()
+
+        # Pull the user inputs from the login form
+        email = request.form['email']
+        password = request.form['password']
+
+        # Create a query to establish a mathch btwn user_input and what is saved in the database
+        query = "SELECT email, password FROM users WHERE email = '"+email+"' AND password = '"+password+"' "
+        cursor.execute(query)
+        results = cursor.fetchall()  # gets the matches btwn user input and the db
+
+        if len(results) == 0:
+            return 'Incorrect credentials. Please try again.'
+        else:
+            return render_template('form.html')
+
+ 
+    return render_template('login.html')
+
+
 
 @app.route("/upload_file" , methods=['POST'])
 def upload_file():
