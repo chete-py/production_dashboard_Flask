@@ -1,0 +1,10 @@
+.hide-on-small-screen {
+    display: block;  /* Show by default */
+}
+
+/* Media query for small screens */
+@media screen and (max-width: 768px) {
+    .hide-on-small-screen {
+        display: none;  /* Hide on small screens */
+    }
+}
