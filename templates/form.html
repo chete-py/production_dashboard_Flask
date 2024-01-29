@@ -2,13 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <title>File Uploader</title>
 </head>
 <body>
-    <h1>File Uploader</h1>
+    
     <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <input type="submit" value="Upload">
+        <div> 
+            <div class="card  w-50 position-absolute top-50 start-50 translate-middle">
+                <div class="card-body"> 
+                    <p style="color:blue;">Upload file to continue</p>
+                    <input type="file" name="file">
+                    <br>
+                    <br>
+                    <input type="submit" value="Upload">
+                </div>
+            </div>
+        </div>
     </form>
 </body>
 </html>

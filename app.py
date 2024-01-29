@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from google.oauth2 import service_account
 from datetime import timedelta
 import mpld3
-from flask import Flask, render_template, request, session, redirect, url_for
+from flask import Flask, render_template, request, session, redirect, url_for , flash
 
 app = Flask(__name__)
 
@@ -66,7 +66,7 @@ def index():
         results = cursor.fetchall()  # gets the matches btwn user input and the db
 
         if len(results) == 0:
-            return 'Incorrect credentials. Please try again.'
+            flash('Incorrect credentials. Try again.', 'error')
         else:
             return render_template('form.html')
 
