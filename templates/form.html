@@ -18,12 +18,13 @@
                     <br>
                     <input type="submit" value="Upload" class="btn btn-primary">
                     <br>
+                    <br>
 
                     {% with messages = get_flashed_messages() %}
                     {% if messages %}
                         <div class="flash-messages">
                         {% for message in messages %}
-                            <p style=color:green;>{{ message }}</p>
+                            <p style=color:red;>{{ message }}</p>
                         {% endfor %}
                         </div>
                     {% endif %}
