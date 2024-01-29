@@ -15,7 +15,19 @@
                     <input type="file" name="file">
                     <br>
                     <br>
-                    <input type="submit" value="Upload">
+                    <br>
+                    <input type="submit" value="Upload" class="btn btn-primary">
+                    <br>
+
+                    {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="flash-messages">
+                        {% for message in messages %}
+                            <p style=color:green;>{{ message }}</p>
+                        {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% endwith %}
                 </div>
             </div>
         </div>

@@ -75,26 +75,56 @@ def index():
 
 
 
-@app.route("/upload_file" , methods=['POST'])
+@app.route("/upload_file" , methods=['GET', 'POST'])
 def upload_file():
-    global df
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part', 'error')
+            return redirect(url_for('upload_file'))
 
-    if 'file' not in request.files:
-        return 'No file part'
+        file = request.files['file']
 
-    file = request.files['file']
+        if file.filename == '':
+            flash('No file selected.', 'error')
+            return redirect(url_for('upload_file'))
 
-    if file.filename == '':
-        return 'No selected file'
+        if file:
+            file_path = 'uploads/' + file.filename
+            file.save(file_path)
+
+            # Store the file path in a session variable
+            session['uploaded_file_path'] = file_path
+
+            # You might want to read the file into a DataFrame here
+            # df = pd.read_csv(file_path)
+
+            return redirect(url_for('home'))
+
+    # Handle the GET request (render the upload form)
+    return render_template('form.html')
+
+
+# def upload_file():
+#     global df
+
+#     if 'file' not in request.files:
+#         return 'No file part'
+
+#     file = request.files['file']
+
+#     if file.filename == '':
+#         flash('No file selected.', 'no file')
+#         return redirect(url_for('upload_file'))
+        
     
-    if file:
-        file_path = 'uploads/' + file.filename
-        file.save(file_path)
+#     if file:
+#         file_path = 'uploads/' + file.filename
+#         file.save(file_path)
 
-        # Store the file path in a session variable
-        session['uploaded_file_path'] = file_path
+#         # Store the file path in a session variable
+#         session['uploaded_file_path'] = file_path
 
-        return redirect(url_for('home'))  # Redirect to the /home route for rendering home.html
+#         return redirect(url_for('home'))  # Redirect to the /home route for rendering home.html
 
 @app.route("/home")
 def home():
