@@ -1,7 +1,8 @@
 Flask
-Gunicorn
+gunicorn
 Pandas
 Gspread
 openpyxl
 matplotlib
 mpld3
+sqlite3
