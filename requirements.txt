@@ -5,4 +5,3 @@ Gspread
 openpyxl
 matplotlib
 mpld3
-sqlite3
