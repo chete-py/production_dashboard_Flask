@@ -1,6 +1,9 @@
 import pandas as pd
 import gspread
 import sqlite3
+import string
+from datetime import datetime, timedelta
+import random
 import matplotlib.pyplot as plt
 from google.oauth2 import service_account
 from datetime import timedelta
@@ -29,27 +32,30 @@ url_targ = "https://docs.google.com/spreadsheets/d/1yQXPZ4zdI8aiIzYXzzuAwDS1V_Zg
 worksheet_accounts = gc.open_by_url(url_acc).worksheet("accounts")
 worksheet_targets = gc.open_by_url(url_targ).worksheet("targets") 
 
+# connection = sqlite3.connect("dashboard.db")
+# cursor = connection.cursor()
 
-# cursor.execute("create TABLE users(employee_number integer primary key, email text, password VARCHAR, name text)")
+# cursor.execute("create TABLE users(employee_number integer primary key, email text, password VARCHAR, name text, reset_token VARCHAR, reset_token_expiry DATETIME)")
 
-#employee_details = [(10001, 'francis@gmail.com', 'Password123', 'Francis Muruge'),
-                    # (10002, 'zak@gmail.com', 'Password123', 'Zakayo Chemiati'),
-                    # (10003, 'muriuki@gmail.com', 'Password123', 'Racheal Muriuki'),
-                    # (10004, 'collins@gmail.com', 'Password123', 'Collins Chetekei'),
-                    # (10005, 'beri@gmail.com', 'Password123', 'Beri Allan')
-                    #  ]
+# employee_details = [(10001, 'francis@gmail.com', 'Password123', 'Francis Muruge', '', ''),
+#                     (10002, 'zak@gmail.com', 'Password123', 'Zakayo Chemiati','',''),
+#                     (10003, 'muriuki@gmail.com', 'Password123', 'Racheal Muriuki', '', ''),
+#                     (10004, 'collins@gmail.com', 'Password123', 'Collins Chetekei', '', ''),
+#                     (10005, 'beri@gmail.com', 'Password123', 'Beri Allan', '', '')
+#                      ]
 
-#cursor.executemany("INSERT OR REPLACE into users values (?,?,?,?)", employee_details)
+# cursor.executemany("INSERT OR REPLACE into users values (?,?,?,?, ?, ?)", employee_details)
 
-#print db
 # for row in cursor.execute("select * from users"):
 #     print(row)
 
-#
+# connection.commit()
+
+
 
 
 @app.route("/", methods=['GET', 'POST'])
-def index():
+def login():
     if request.method == 'POST':
 
         # Establish connection to the database
@@ -60,7 +66,7 @@ def index():
         email = request.form['email']
         password = request.form['password']
 
-        # Create a query to establish a mathch btwn user_input and what is saved in the database
+        # Create a query to establish a match btwn user_input and what is saved in the database
         query = "SELECT email, password FROM users WHERE email = '"+email+"' AND password = '"+password+"' "
         cursor.execute(query)
         results = cursor.fetchall()  # gets the matches btwn user input and the db
@@ -69,10 +75,8 @@ def index():
             flash('Incorrect credentials. Try again.', 'error')
         else:
             return render_template('form.html')
-
  
     return render_template('login.html')
-
 
 
 @app.route("/upload_file" , methods=['GET', 'POST'])
@@ -102,6 +106,42 @@ def upload_file():
 
     # Handle the GET request (render the upload form)
     return render_template('form.html')
+
+# Function to generate a random string for the reset token
+def generate_reset_token():
+    token_length = 20
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(characters) for i in range(token_length))
+
+
+@app.route('/reset_password', methods=['GET', 'POST'])
+def reset_request():
+    if request.method == 'POST':
+        email = request.form['email']
+        # Establish connection to the database
+        connection = sqlite3.connect("dashboard.db")
+        cursor = connection.cursor()
+        query = "SELECT email FROM users WHERE email = ? "
+        cursor.execute(query,(email,))
+        user = cursor.fetchone()  # gets the match btwn user input and the db
+
+        if user:
+            # Generate a reset token
+            reset_token = generate_reset_token()
+
+            # Store the reset token and expiry time in the database
+            expiry_time = datetime.now() + timedelta(hours=1)  # Adjust the expiration time as needed
+            update_query = "UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE email = ?"
+            cursor.execute(update_query, (reset_token, expiry_time, email))
+            connection.commit()
+
+            flash('A password reset link has been sent to your email.', 'info')
+            return redirect(url_for('login'))
+
+        else:
+            flash('Email not found. Please check your email address.', 'error')
+
+    return render_template('reset_request.html')
 
 
 # def upload_file():
