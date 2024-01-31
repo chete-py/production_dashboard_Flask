@@ -5,3 +5,4 @@ Gspread
 openpyxl
 matplotlib
 mpld3
+flask_mail

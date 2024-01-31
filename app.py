@@ -11,6 +11,8 @@ import mpld3
 from flask import Flask, render_template, request, session, redirect, url_for , flash
 from flask_mail import Mail, Message
 
+
+
 app = Flask(__name__)
 
 app.secret_key = 'PfdRs1999@A-402'
