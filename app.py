@@ -9,6 +9,7 @@ from google.oauth2 import service_account
 from datetime import timedelta
 import mpld3
 from flask import Flask, render_template, request, session, redirect, url_for , flash
+from flask_mail import Mail, Message
 
 app = Flask(__name__)
 
@@ -36,11 +37,12 @@ worksheet_targets = gc.open_by_url(url_targ).worksheet("targets")
 # cursor = connection.cursor()
 
 # cursor.execute("create TABLE users(employee_number integer primary key, email text, password VARCHAR, name text, reset_token VARCHAR, reset_token_expiry DATETIME)")
+# cursor.execute('create TABLE production("TRANSACTION DATE" datetime, "BRANCH", "INTERMEDIARY TYPE", "INTERMEDIARY", "PRODUCT", "PORTFOLIO MIX", "SALES TYPE" num, "SUM INSURED" num, "GROSS PREMIUM" num, "NET BALANCE" num, "RECEIPTS" num, "NEW TM", "MONTH NAME", "DayOfWeek")')
 
 # employee_details = [(10001, 'francis@gmail.com', 'Password123', 'Francis Muruge', '', ''),
 #                     (10002, 'zak@gmail.com', 'Password123', 'Zakayo Chemiati','',''),
 #                     (10003, 'muriuki@gmail.com', 'Password123', 'Racheal Muriuki', '', ''),
-#                     (10004, 'collins@gmail.com', 'Password123', 'Collins Chetekei', '', ''),
+#                     (10004, 'chetekei007@gmail.com', 'Password123', 'Collins Chetekei', '', ''),
 #                     (10005, 'beri@gmail.com', 'Password123', 'Beri Allan', '', '')
 #                      ]
 
@@ -50,8 +52,6 @@ worksheet_targets = gc.open_by_url(url_targ).worksheet("targets")
 #     print(row)
 
 # connection.commit()
-
-
 
 
 @app.route("/", methods=['GET', 'POST'])
@@ -107,6 +107,34 @@ def upload_file():
     # Handle the GET request (render the upload form)
     return render_template('form.html')
 
+
+# Configure Flask-Mail settings
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = 'chetekei007@gmail.com'
+app.config['MAIL_PASSWORD'] = 'idtptgybyntrgunr'
+app.config['MAIL_DEBUG'] = True
+
+mail = Mail(app) 
+
+# Function to send email with reset token
+def send_reset_email(email, reset_token):
+    subject = 'Password Reset'
+    message = Message(subject=subject, body=body, recipients=[email])
+    body = f"Click the following link to reset your password: {url_for('reset_password', token=reset_token, _external=True)}"
+    try:
+        mail.send(message)
+        flash('Email sent successfully. Check your inbox for the confirmation link.', 'success')
+    except Exception as e:
+        flash(f'Error sending email: {str(e)}', 'error')
+
+
+#mail.send(message)
+    
+
+
 # Function to generate a random string for the reset token
 def generate_reset_token():
     token_length = 20
@@ -136,35 +164,14 @@ def reset_request():
             connection.commit()
 
             flash('A password reset link has been sent to your email.', 'info')
-            return redirect(url_for('login'))
+            return redirect(url_for('reset_request'))
 
         else:
             flash('Email not found. Please check your email address.', 'error')
+            return redirect(url_for('reset_request'))
 
     return render_template('reset_request.html')
 
-
-# def upload_file():
-#     global df
-
-#     if 'file' not in request.files:
-#         return 'No file part'
-
-#     file = request.files['file']
-
-#     if file.filename == '':
-#         flash('No file selected.', 'no file')
-#         return redirect(url_for('upload_file'))
-        
-    
-#     if file:
-#         file_path = 'uploads/' + file.filename
-#         file.save(file_path)
-
-#         # Store the file path in a session variable
-#         session['uploaded_file_path'] = file_path
-
-#         return redirect(url_for('home'))  # Redirect to the /home route for rendering home.html
 
 @app.route("/home")
 def home():
@@ -173,7 +180,7 @@ def home():
 
     if file_path:
         df,bar_df, image_base64, week_gp, week_receipted, week_credit, month_gp, month_receipted, month_credit, yp, yr, yc = process_uploaded_file(file_path)
-        return render_template('home.html', bar_df=bar_df, image_base64=image_base64, data=df, week_gp=week_gp, week_receipted=week_receipted, week_credit=week_credit, month_gp=month_gp, month_receipted=month_receipted, month_credit=month_credit, yp=yp, yc=yc, yr=yr)
+        return render_template('home.html', df=df, bar_df=bar_df, image_base64=image_base64, data=df, week_gp=week_gp, week_receipted=week_receipted, week_credit=week_credit, month_gp=month_gp, month_receipted=month_receipted, month_credit=month_credit, yp=yp, yc=yc, yr=yr)
     else:
         return 'No uploaded file found.'
 
@@ -188,20 +195,22 @@ def tms():
             selected_manager = request.form.get('manager')
 
             # Process the selected manager and filter the data
-            df, newdf, week_gp, week_receipted, week_credit, month_gp, month_receipted, month_credit = process_uploaded_file(file_path)
-            filtered_data = newdf[newdf['INTERMEDIARY'] == selected_manager]
+            df, db_df, week_gp, week_receipted, week_credit, month_gp, month_receipted, month_credit = process_uploaded_file(file_path)
+            filtered_data = db_df[db_df['INTERMEDIARY'] == selected_manager]
             data_to_render = filtered_data.to_dict(orient='records')
 
             return render_template('tms.html', data=data_to_render, week_gp=week_gp, week_receipted=week_receipted, week_credit=week_credit, month_gp=month_gp, month_receipted=month_receipted, month_credit=month_credit)
 
         else:
             # Initial rendering without manager selection
-            df, newdf, week_gp, week_receipted, week_credit, month_gp, month_receipted, month_credit = process_uploaded_file(file_path)
+            df, db_df, week_gp, week_receipted, week_credit, month_gp, month_receipted, month_credit = process_uploaded_file(file_path)
             return render_template('tms.html', data=df, week_gp=week_gp, week_receipted=week_receipted, week_credit=week_credit, month_gp=month_gp, month_receipted=month_receipted, month_credit=month_credit)
 
     else:
         return 'No uploaded file found..'
         
+
+
 
 def process_uploaded_file(file_path):
     
@@ -240,12 +249,23 @@ def process_uploaded_file(file_path):
     jointdf = jointdf[["TRANSACTION DATE", "BRANCH", "INTERMEDIARY TYPE", "INTERMEDIARY", "PRODUCT", "PORTFOLIO MIX", "SALES TYPE", "SUM INSURED", "GROSS PREMIUM", "NET BALANCE", "RECEIPTS", "NEW TM", "MONTH NAME", "DayOfWeek"]].copy()
     
     newdf = jointdf.dropna(subset='TRANSACTION DATE').copy()
-    bar_df = newdf.groupby('MONTH NAME')['GROSS PREMIUM'].sum().reset_index()
+    
+    # Push DataFrame to the database
+    connection = sqlite3.connect("dashboard.db")
+    
+    newdf.to_sql('production', connection, if_exists='replace', index=False)
+
+    query = "SELECT * FROM production"
+    db_df = pd.read_sql_query(query, connection)
+    db_df['TRANSACTION DATE'] = pd.to_datetime(db_df['TRANSACTION DATE'])
+
+    
+    bar_df = db_df.groupby('MONTH NAME')['GROSS PREMIUM'].sum().reset_index()
 
   
     
     # THIS MONTH
-    this_month = newdf.loc[newdf['MONTH NAME'] == current_month_name].copy()
+    this_month = db_df.loc[db_df['MONTH NAME'] == current_month_name].copy()
     month_prem = this_month['GROSS PREMIUM'].sum()
     month_gp = "Ksh. {:,.0f}".format(month_prem)
    
@@ -258,7 +278,7 @@ def process_uploaded_file(file_path):
  
     
     # Get transactions done in the current week
-    this_week = newdf.loc[((newdf['TRANSACTION DATE']).dt.date >= start_of_week.date()) & ((newdf['TRANSACTION DATE']).dt.date <= end_of_week.date())].copy()
+    this_week = db_df.loc[((db_df['TRANSACTION DATE']).dt.date >= start_of_week.date()) & ((db_df['TRANSACTION DATE']).dt.date <= end_of_week.date())].copy()
     week_prem = this_week['GROSS PREMIUM'].sum() 
     week_gp = "Ksh. {:,.0f}".format(week_prem)
   
@@ -270,7 +290,7 @@ def process_uploaded_file(file_path):
 
 
      # MOST RECENT (YESTERDAY)
-    most_recent_date = newdf[newdf['TRANSACTION DATE'] == newdf['TRANSACTION DATE'].max()].copy()
+    most_recent_date = db_df[db_df['TRANSACTION DATE'] == db_df['TRANSACTION DATE'].max()].copy()
     first_recent_date = most_recent_date.iloc[-1] # last date
 
     friday_df = this_week[this_week['DayOfWeek'] == 'Friday']
@@ -313,7 +333,7 @@ def process_uploaded_file(file_path):
     else:
         
         yesterday = most_recent_date['GROSS PREMIUM'].sum()
-        yesterday_receipts_total = most_recent_date.loc[most_recent_date['RECEIPTS'] > 0, 'RECEIPTS'].sum()
+        yesterday_receipts_total = most_recent_date.loc[most_recent_date['RECEIPTS'] >= 0, 'RECEIPTS'].sum()
         yesterday_credit_total = most_recent_date.loc[most_recent_date['NET BALANCE'] > 0, 'NET BALANCE'].sum()
         cancelled_yesterday = most_recent_date.loc[most_recent_date['GROSS PREMIUM'] < 0, 'GROSS PREMIUM'].sum()
        
@@ -323,7 +343,7 @@ def process_uploaded_file(file_path):
     yc = "Ksh. {:,.0f}".format(yesterday_credit_total)  
     
 
-    unique_manager = newdf['NEW TM'].unique().tolist()
+    unique_manager = db_df['NEW TM'].unique().tolist()
 
     fig, ax = plt.subplots(figsize=(10,6))
     ax.bar(bar_df['MONTH NAME'], bar_df['GROSS PREMIUM'], color='#00A550',)
@@ -337,6 +357,7 @@ def process_uploaded_file(file_path):
     
     df = df2.to_dict(orient='records')
     return df, bar_df, image_base64, week_gp, week_receipted, week_credit, month_gp, month_receipted, month_credit, yp, yc, yr
+
 
 
 if __name__ == '__main__':

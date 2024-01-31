@@ -17,6 +17,16 @@
                                      
                     <input type="submit" value="Reset Password" class="btn btn-primary">
 
+                    {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="flash-messages">
+                        {% for message in messages %}
+                            <p style=color:red;>{{ message }}</p>
+                        {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% endwith %}
+
                     
                 </div>
             </div>
