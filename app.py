@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from google.oauth2 import service_account
 from datetime import timedelta
 import mpld3
-from flask import Flask, render_template, request, session, redirect, url_for , flash
+from flask import Flask, render_template, request, session, redirect, url_for , flash, jsonify
 from flask_mail import Mail, Message
 
 
@@ -133,10 +133,6 @@ def send_reset_email(email, reset_token):
         flash(f'Error sending email: {str(e)}', 'error')
 
 
-#mail.send(message)
-    
-
-
 # Function to generate a random string for the reset token
 def generate_reset_token():
     token_length = 20
@@ -188,30 +184,26 @@ def home():
 
 
 @app.route("/tms")
+
 def tms():
-    #Retrieve the uploaded file path from the session
-    file_path = session.get('uploaded_file_path', None)
+    connection = sqlite3.connect("dashboard.db")
+    cursor = connection.cursor()
 
-    if file_path:
-        if request.method == 'POST':
-            selected_manager = request.form.get('manager')
+    # Fetch unique "NEW TM" values
+    cursor.execute("SELECT DISTINCT [NEW TM] FROM production")
+    unique_tms = [row[0] for row in cursor.fetchall()]
 
-            # Process the selected manager and filter the data
-            df, db_df, week_gp, week_receipted, week_credit, month_gp, month_receipted, month_credit = process_uploaded_file(file_path)
-            filtered_data = db_df[db_df['INTERMEDIARY'] == selected_manager]
-            data_to_render = filtered_data.to_dict(orient='records')
+    employeelist = []
 
-            return render_template('tms.html', data=data_to_render, week_gp=week_gp, week_receipted=week_receipted, week_credit=week_credit, month_gp=month_gp, month_receipted=month_receipted, month_credit=month_credit)
-
-        else:
-            # Initial rendering without manager selection
-            df, db_df, week_gp, week_receipted, week_credit, month_gp, month_receipted, month_credit = process_uploaded_file(file_path)
-            return render_template('tms.html', data=df, week_gp=week_gp, week_receipted=week_receipted, week_credit=week_credit, month_gp=month_gp, month_receipted=month_receipted, month_credit=month_credit)
-
-    else:
-        return 'No uploaded file found..'
-        
-
+    if request.method == 'POST':
+        selected_tm = request.form.get('selected_tm')
+        if selected_tm:
+            cursor.execute('SELECT * FROM production WHERE [NEW TM] = ? ORDER BY id DESC', (selected_tm,))
+            employeelist = cursor.fetchall()
+            
+    return render_template('tms.html', unique_tms=unique_tms, employeelist=employeelist)
+ 
+    
 
 
 def process_uploaded_file(file_path):
@@ -260,11 +252,6 @@ def process_uploaded_file(file_path):
     query = "SELECT * FROM production"
     db_df = pd.read_sql_query(query, connection)
     db_df['TRANSACTION DATE'] = pd.to_datetime(db_df['TRANSACTION DATE'])
-
-    
-    bar_df = db_df.groupby('MONTH NAME')['GROSS PREMIUM'].sum().reset_index()
-
-  
     
     # THIS MONTH
     this_month = db_df.loc[db_df['MONTH NAME'] == current_month_name].copy()
@@ -347,6 +334,8 @@ def process_uploaded_file(file_path):
 
     unique_manager = db_df['NEW TM'].unique().tolist()
 
+    bar_df = db_df.groupby('MONTH NAME')['GROSS PREMIUM'].sum().reset_index()
+  
     fig, ax = plt.subplots(figsize=(10,6))
     ax.bar(bar_df['MONTH NAME'], bar_df['GROSS PREMIUM'], color='#00A550',)
     ax.set_xlabel('Month')
