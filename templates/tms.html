@@ -25,63 +25,11 @@
 
     </head>
     <body>
-      <form method="POST">
-        <label for="tm_select">Select NEW TM:</label>
-        <select id="tm_select" name="selected_tm">
-            {% for tm in unique_tms %}
-                <option value="{{ tm }}">{{ tm }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit">Submit</button>
-    </form>
 
-    <div id="tm_data">
-      {% if employeelist %}
-          <table>
-              <thead>
-                  <tr>
-                      <th>TRANSACTION DATE</th>
-                      <th>TM</th>
-                      <th>GROSS PREMIUM</th>
-                      <th>NET BALANCE</th>
-                      <!-- Add more columns based on your 'production' table structure -->
-                  </tr>
-              </thead>
-              <tbody>
-                  {% for row in employeelist %}
-                      <tr>
-                          <td>{{ row['TRANSACTION DATE']}}</td>
-                          <td>{{ row['NEW TM'] }}</td>
-                          <td>{{ row['GROSS PREMIUM'] }}</td>
-                          <td>{{ row['NET BALANCE'] }}</td>
-                          <!-- Add more cells based on your 'production' table structure -->
-                      </tr>
-                  {% endfor %}
-              </tbody>
-          </table>
-      {% else %}
-          <p>No data available for the selected NEW TM.</p>
-      {% endif %}
-  </div>
-
-        <div class="card" style="margin: 2.5% 5%; padding: 1.5%;">
-
-            <div style="padding-bottom: 0.5%;">
-                <ul class="nav nav-pills">
-                    <li class="nav-item">
-                      <a class="nav-link" href="{{ url_for('home') }}">Global Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="nav-link active" href="">Territorial Manager</a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="nav-link" href="#">Intermediaries</a>
-                    </li>
-                  </ul>
-
-            </div>
-
-            
+      <label for="newTMDropdown">Select NEW TM:</label>
+      <select id="newTMDropdown"></select>
+     
+             
 
             <div class="row" style="padding-bottom:0.5%;">
                 <div class="col-sm-4">
@@ -89,7 +37,7 @@
                     <div class="card-body">
                       <h5 class="card-title">Month To Date</h5>
                       <h6 class="card-title">Production</h6>
-                      <p class="card-text">Amount: Ksh.</p>
+                      <p id="grossPremiumCard" class="card-text">Amount: Ksh.</p>
                       <p class="card-text">Number of Policies: </p> 
                     </div>
                   </div>
@@ -151,52 +99,38 @@
 
         </div>
 
-        {{employeelist}}
-        
-        
-        <div class="container">
-          <table class="table">
-              <thead>
-                  <tr>
-                      <th scope="col">TRANSACTION DATE</th>
-                      <th scope="col">BRANCH</th>
-                      <th scope="col">TM</th>
-                      <th scope="col">INTERMEDIARY</th>
-                      <th scope="col">GROSS PREMIUM</th>
-                      <th scope="col">RECEIPTS</th>
-                      
-                  </tr>
-              </thead>
-              <tbody>
-                  {% for row in data %}
-                      <tr>
-                          <td>{{ row['TRANSACTION DATE'] }}</td>
-                          <td>{{ row['BRANCH'] }}</td>
-                          <td>{{ row['NEW TM'] }}</td>
-                          <td>{{ row['INTERMEDIARY'] }}</td>
-                          <td>{{ row['GROSS PREMIUM'] }}</td>
-                          <td>{{ row['RECEIPTS'] }}</td>
-                      </tr>
-                  {% endfor %}
-              </tbody>
-          </table>
-      </div>
-
-      <script>
-        // Add JavaScript to handle selection change and make AJAX request
-        document.getElementById('tm_select').addEventListener('change', function() {
-            var selectedTM = this.value;
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', '/tms', true);
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    document.getElementById('tm_data').innerHTML = xhr.responseText;
-                }
-            };
-            xhr.send('selected_tm=' + encodeURIComponent(selectedTM));
-        });
-    </script>
+        <script>
+          document.addEventListener('DOMContentLoaded', function() {
+              const newTMDropdown = document.getElementById('newTMDropdown');
+              const grossPremiumCard = document.getElementById('grossPremiumCard');
+      
+              // Fetch new TM options with their gross premium sums
+              fetch('/get_new_tm_options_with_sum')
+                  .then(response => response.json())
+                  .then(data => {
+                      // Populate the dropdown with options from the server
+                      data.new_tm_options_with_sum.forEach(option => {
+                          const optionElement = document.createElement('option');
+                          optionElement.value = option.new_tm;
+                          optionElement.text = option.new_tm;
+                          newTMDropdown.add(optionElement);
+                      });
+      
+                      // Add event listener to the dropdown for change event
+                      newTMDropdown.addEventListener('change', function() {
+                          const selectedTM = newTMDropdown.value;
+      
+                          // Find the selected TM in the fetched data
+                          const selectedTMSum = data.new_tm_options_with_sum.find(option => option.new_tm === selectedTM);
+      
+                          // Update the content of the card with the fetched sum
+                          grossPremiumCard.textContent = `Gross Premium Sum: Ksh. ${selectedTMSum ? selectedTMSum.gross_premium_sum : 0}`;
+                      });
+                  })
+                  .catch(error => console.error('Error fetching new TM options with sum:', error));
+          });
+      </script>
+      
 
     </body>
 </html>

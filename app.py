@@ -184,28 +184,28 @@ def home():
 
 
 @app.route("/tms")
-
 def tms():
+    return render_template('tms.html')
+
+
+@app.route('/get_new_tm_options_with_sum')
+def get_new_tm_options_with_sum():
     connection = sqlite3.connect("dashboard.db")
     cursor = connection.cursor()
 
-    # Fetch unique "NEW TM" values
-    cursor.execute("SELECT DISTINCT [NEW TM] FROM production")
-    unique_tms = [row[0] for row in cursor.fetchall()]
+    # Fetch unique "NEW TM" values and the sum of gross premium for each "NEW TM"
+    cursor.execute("SELECT [NEW TM], SUM([GROSS PREMIUM]) FROM production GROUP BY [NEW TM]")
+    new_tm_data = cursor.fetchall()
 
-    employeelist = []
+    connection.close()
 
-    if request.method == 'POST':
-        selected_tm = request.form.get('selected_tm')
-        if selected_tm:
-            cursor.execute('SELECT * FROM production WHERE [NEW TM] = ? ORDER BY id DESC', (selected_tm,))
-            employeelist = cursor.fetchall()
+    # Convert the fetched data into a list of dictionaries
+    new_tm_options_with_sum = [{'new_tm': row[0], 'gross_premium_sum': row[1]} for row in new_tm_data]
+
+    return jsonify({'new_tm_options_with_sum': new_tm_options_with_sum})
+
+
             
-    return render_template('tms.html', unique_tms=unique_tms, employeelist=employeelist)
- 
-    
-
-
 def process_uploaded_file(file_path):
     
     df = pd.read_excel(file_path, header=6)
