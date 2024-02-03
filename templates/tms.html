@@ -26,79 +26,126 @@
     </head>
     <body>
 
-      <label for="newTMDropdown">Select NEW TM:</label>
-      <select id="newTMDropdown"></select>
-     
-             
+      
+      <div class="card" style="margin: 2.5% 5%; padding: 1.5%;">
 
-            <div class="row" style="padding-bottom:0.5%;">
-                <div class="col-sm-4">
-                  <div class="card">
-                    <div class="card-body">
-                      <h5 class="card-title">Month To Date</h5>
-                      <h6 class="card-title">Production</h6>
-                      <p id="grossPremiumCard" class="card-text">Amount: Ksh.</p>
-                      <p class="card-text">Number of Policies: </p> 
-                    </div>
-                  </div>
-                </div>
-                <div class="col-sm-4">
-                  <div class="card">
-                    <div class="card-body">
-                      <h5 class="card-title">Month To Date</h5>
-                      <h6 class="card-title">Receipted</h6>
-                      <p class="card-text">Amount: Ksh.</p>
-                      <p class="card-text">Number of Policies: </p>                      
-                    </div>
-                  </div>
-                </div>
-                <div class="col-sm-4">
-                    <div class="card">
-                      <div class="card-body">
-                        <h5 class="card-title">Month To Date</h5>
-                        <h6 class="card-title">Cancelled</h6>
-                        <p class="card-text">Amount: Ksh.</p>
-                        <p class="card-text">Number of Policies: </p> 
-                      </div>
-                    </div>
-                  </div>
-              </div>
-              <div class="row">
-                <div class="col-sm-4">
-                  <div class="card">
-                    <div class="card-body">
-                      <h5 class="card-title">Week To Date</h5>
-                      <h6 class="card-title">Production</h6>
-                      <p class="card-text">Amount: Ksh.</p>
-                      <p class="card-text">Number of Policies: </p> 
-                    </div>
-                  </div>
-                </div>
-                <div class="col-sm-4">
-                  <div class="card">
-                    <div class="card-body">
-                      <h5 class="card-title">Week To Date</h5>
-                      <h6 class="card-title">Receipted</h6>
-                      <p class="card-text">Amount: Ksh.</p>
-                      <p class="card-text">Number of Policies: </p> 
-                    </div>
-                  </div>
-                </div>
-                <div class="col-sm-4">
-                    <div class="card">
-                      <div class="card-body">
-                        <h5 class="card-title">Week To Date</h5>
-                        <h6 class="card-title">Cancelled</h6>
-                        <p class="card-text">Amount: Ksh.</p>
-                        <p class="card-text">Number of Policies: </p> 
-                      </div>
-                    </div>
-                  </div>
-              </div>    
+        <div style="padding-bottom: 0.5%;">
+             <ul class="nav nav-pills">
+                 <li class="nav-item">
+                   <a class="nav-link " href="{{ url_for('home') }}">Global Dashboard</a>
+                 </li>
+                 <li class="nav-item">
+                   <a class="nav-link active" href="">Territorial Manager</a>
+                 </li>
+                 <li class="nav-item">
+                   <a class="nav-link" href="#">Intermediaries</a>
+                 </li>
+                 <li>
+                  <label for="newTMDropdown">Select Account Manager:</label>
+                  <select id="newTMDropdown"></select>
 
+                 </li>
+               </ul>
 
-        </div>
+         </div>           
 
+         <div class="row" style="padding-bottom:0.5%;">
+             <div class="col-sm-4">
+               <div class="card">
+                 <div class="card-body">
+                   <h5 class="card-title">Month To Date</h5>
+                   <h6 class="card-title">Production</h6>
+                   <p id="grossPremiumCard" class="card-text">Amount: Ksh. </p>
+                   <p class="card-text">Number of Policies: </p> 
+                 </div>
+               </div>
+             </div>
+             <div class="col-sm-4">
+               <div class="card">
+                 <div class="card-body">
+                   <h5 class="card-title">Month To Date</h5>
+                   <h6 class="card-title">Receipted</h6>
+                   <p class="card-text">Amount: </p>
+                   <p class="card-text">Number of Policies: </p>                      
+                 </div>
+               </div>
+             </div>
+             <div class="col-sm-4">
+                 <div class="card">
+                   <div class="card-body">
+                     <h5 class="card-title">Month To Date</h5>
+                     <h6 class="card-title">On Credit</h6>
+                     <p class="card-text">Amount:</p>
+                     <p class="card-text">Number of Policies: </p> 
+                   </div>
+                 </div>
+               </div>
+           </div>
+           <div class="row" style="padding-bottom:0.5%;">
+               <div class="col-sm-4">
+                 <div class="card">
+                   <div class="card-body">
+                     <h5 class="card-title">Week To Date</h5>
+                     <h6 class="card-title">Production</h6>
+                     <p class="card-text">Amount: </p>
+                     <p class="card-text">Number of Policies: </p> 
+                   </div>
+                 </div>
+               </div>
+               <div class="col-sm-4">
+                 <div class="card">
+                   <div class="card-body">
+                     <h5 class="card-title">Week To Date</h5>
+                     <h6 class="card-title">Receipted</h6>
+                     <p class="card-text">Amount: </p>
+                     <p class="card-text">Number of Policies: </p> 
+                   </div>
+                 </div>
+               </div>
+               <div class="col-sm-4">
+                 <div class="card">
+                   <div class="card-body">
+                     <h5 class="card-title">Week To Date</h5>
+                     <h6 class="card-title">On Credit</h6>
+                     <p class="card-text">Amount: </p>
+                     <p class="card-text">Number of Policies: </p> 
+                   </div>
+                 </div>
+             </div>
+           </div> 
+           <div class="row" style="padding-bottom:0.5%;">
+             <div class="col-sm-4">
+               <div class="card">
+                 <div class="card-body">
+                   <h5 class="card-title">Yesterday</h5>
+                   <h6 class="card-title">Production</h6>
+                   <p class="card-text">Amount: </p>
+                   <p class="card-text">Number of Policies: </p> 
+                 </div>
+               </div>
+             </div>
+             <div class="col-sm-4">
+               <div class="card">
+                 <div class="card-body">
+                   <h5 class="card-title">Yesterday</h5>
+                   <h6 class="card-title">Receipted</h6>
+                   <p class="card-text">Amount: </p>
+                   <p class="card-text">Number of Policies: </p> 
+                 </div>
+               </div>
+             </div>
+             <div class="col-sm-4">
+               <div class="card">
+                 <div class="card-body">
+                   <h5 class="card-title">Yesterday</h5>
+                   <h6 class="card-title">On Credit</h6>
+                   <p class="card-text">Amount: </p>
+                   <p class="card-text">Number of Policies: </p> 
+                 </div>
+               </div>
+           </div>
+         </div> 
+                 
         <script>
           document.addEventListener('DOMContentLoaded', function() {
               const newTMDropdown = document.getElementById('newTMDropdown');
