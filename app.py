@@ -40,6 +40,10 @@ worksheet_targets = gc.open_by_url(url_targ).worksheet("targets")
 
 # cursor.execute("create TABLE users(employee_number integer primary key, email text, password VARCHAR, name text, reset_token VARCHAR, reset_token_expiry DATETIME)")
 # cursor.execute('create TABLE production("TRANSACTION DATE" datetime, "BRANCH", "INTERMEDIARY TYPE", "INTERMEDIARY", "PRODUCT", "PORTFOLIO MIX", "SALES TYPE" num, "SUM INSURED" num, "GROSS PREMIUM" num, "NET BALANCE" num, "RECEIPTS" num, "NEW TM", "MONTH NAME", "DayOfWeek")')
+# cursor.execute('create TABLE current_month("TRANSACTION DATE" datetime, "BRANCH", "INTERMEDIARY TYPE", "INTERMEDIARY", "PRODUCT", "PORTFOLIO MIX", "SALES TYPE" num, "SUM INSURED" num, "GROSS PREMIUM" num, "NET BALANCE" num, "RECEIPTS" num, "NEW TM", "MONTH NAME", "DayOfWeek")')
+
+
+    
 
 # employee_details = [(10001, 'francis@gmail.com', 'Password123', 'Francis Muruge', '', ''),
 #                     (10002, 'zak@gmail.com', 'Password123', 'Zakayo Chemiati','',''),
@@ -193,8 +197,16 @@ def get_new_tm_options_with_sum():
     connection = sqlite3.connect("dashboard.db")
     cursor = connection.cursor()
 
-    # Fetch unique "NEW TM" values and the sum of gross premium for each "NEW TM"
-    cursor.execute("SELECT [NEW TM], SUM([GROSS PREMIUM]) FROM production GROUP BY [NEW TM]")
+    # Execute the query using parameter binding
+    query = """
+        SELECT [NEW TM], SUM([GROSS PREMIUM])
+        FROM current_month
+        GROUP BY [NEW TM];
+    """
+
+    cursor.execute(query)
+
+    # Fetch the results or perform further operations as needed
     new_tm_data = cursor.fetchall()
 
     connection.close()
@@ -243,11 +255,14 @@ def process_uploaded_file(file_path):
     jointdf = jointdf[["TRANSACTION DATE", "BRANCH", "INTERMEDIARY TYPE", "INTERMEDIARY", "PRODUCT", "PORTFOLIO MIX", "SALES TYPE", "SUM INSURED", "GROSS PREMIUM", "NET BALANCE", "RECEIPTS", "NEW TM", "MONTH NAME", "DayOfWeek"]].copy()
     
     newdf = jointdf.dropna(subset='TRANSACTION DATE').copy()
+    current_month_data = newdf[newdf['MONTH NAME'] == current_month_name]
+
     
     # Push DataFrame to the database
     connection = sqlite3.connect("dashboard.db")
     
     newdf.to_sql('production', connection, if_exists='replace', index=False)
+    current_month_data.to_sql('current_month', connection, if_exists='replace', index=False)
 
     query = "SELECT * FROM production"
     db_df = pd.read_sql_query(query, connection)
