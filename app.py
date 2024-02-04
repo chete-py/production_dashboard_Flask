@@ -199,7 +199,7 @@ def get_new_tm_options_with_sum():
 
     # Execute the query using parameter binding
     query = """
-        SELECT [NEW TM], SUM([GROSS PREMIUM])
+        SELECT [NEW TM], SUM([GROSS PREMIUM]), SUM(CASE WHEN [RECEIPTS] > 0 THEN [RECEIPTS] ELSE 0 END), SUM(CASE WHEN [NET BALANCE] > 0 THEN [NET BALANCE] ELSE 0 END)
         FROM current_month
         GROUP BY [NEW TM];
     """
@@ -212,10 +212,10 @@ def get_new_tm_options_with_sum():
     connection.close()
 
     # Convert the fetched data into a list of dictionaries
-    new_tm_options_with_sum = [{'new_tm': row[0], 'gross_premium_sum': row[1]} for row in new_tm_data]
-
+    new_tm_options_with_sum = [{'new_tm': row[0], 'gross_premium_sum': row[1], 'receipts_sum': row[2], 'net_balance': row[3]} for row in new_tm_data]
+    
     return jsonify({'new_tm_options_with_sum': new_tm_options_with_sum})
-
+    
 
             
 def process_uploaded_file(file_path):

@@ -42,7 +42,7 @@
                  <li class="nav-item">
                    <a class="nav-link" href="#">Intermediaries</a>
                  </li>  
-                 <li>
+                 <li >
                  <div style="color:#1f75fe; margin-left: 90%">
                   <label for="newTMDropdown">Select_Account_Manager</label>                  
                   <select id="newTMDropdown"></select>
@@ -73,7 +73,7 @@
                  <div class="card-body">
                    <h5 class="card-title">Month To Date</h5>
                    <h6 class="card-title">Receipted</h6>
-                   <p class="card-text">Amount: </p>
+                   <p id = "receiptsCard" class="card-text">Amount: </p>
                    <p class="card-text">Number of Policies: </p>                      
                  </div>
                </div>
@@ -83,7 +83,7 @@
                    <div class="card-body">
                      <h5 class="card-title">Month To Date</h5>
                      <h6 class="card-title">On Credit</h6>
-                     <p class="card-text">Amount:</p>
+                     <p id = "netbalanceCard" class="card-text">Amount: Ksh. </p>
                      <p class="card-text">Number of Policies: </p> 
                    </div>
                  </div>
@@ -155,37 +155,43 @@
          </div> 
                  
         <script>
-          document.addEventListener('DOMContentLoaded', function() {
-              const newTMDropdown = document.getElementById('newTMDropdown');
-              const grossPremiumCard = document.getElementById('grossPremiumCard');
-      
-              // Fetch new TM options with their gross premium sums
-              fetch('/get_new_tm_options_with_sum')
-                  .then(response => response.json())
-                  .then(data => {
-                      // Populate the dropdown with options from the server
-                      data.new_tm_options_with_sum.forEach(option => {
-                          const optionElement = document.createElement('option');
-                          optionElement.value = option.new_tm;
-                          optionElement.text = option.new_tm;
-                          newTMDropdown.add(optionElement);
-                      });
-      
-                      // Add event listener to the dropdown for change event
-                      newTMDropdown.addEventListener('change', function() {
-                          const selectedTM = newTMDropdown.value;
-      
-                          // Find the selected TM in the fetched data
-                          const selectedTMSum = data.new_tm_options_with_sum.find(option => option.new_tm === selectedTM);
-      
-                          // Update the content of the card with the fetched sum
-                          grossPremiumCard.textContent = `Gross Premium Sum: Ksh. ${selectedTMSum ? selectedTMSum.gross_premium_sum : 0}`;
-                      });
-                  })
-                  .catch(error => console.error('Error fetching new TM options with sum:', error));
+          
+        document.addEventListener('DOMContentLoaded', function() {
+        const newTMDropdown = document.getElementById('newTMDropdown');
+        const grossPremiumCard = document.getElementById('grossPremiumCard');
+        const receiptsCard = document.getElementById('receiptsCard');
+        const netbalanceCard = document.getElementById('netbalanceCard');
+
+
+        // Fetch new TM options with their gross premium and receipts sums
+        fetch('/get_new_tm_options_with_sum')
+            .then(response => response.json())
+            .then(data => {
+                // Populate the dropdown with options from the server
+                data.new_tm_options_with_sum.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option.new_tm;
+                    optionElement.text = option.new_tm;
+                    newTMDropdown.add(optionElement);
+                });
+
+                // Add event listener to the dropdown for change event
+                newTMDropdown.addEventListener('change', function() {
+                    const selectedTM = newTMDropdown.value;
+
+                    // Find the selected TM in the fetched data
+                    const selectedTMSum = data.new_tm_options_with_sum.find(option => option.new_tm === selectedTM);
+
+                    // Update the content of the card with the fetched sums
+                    grossPremiumCard.textContent = `Amount: Ksh. ${selectedTMSum ? selectedTMSum.gross_premium_sum : 0}`;
+                    receiptsCard.textContent = `Amount: Ksh. ${selectedTMSum ? selectedTMSum.receipts_sum : 0}`;
+                    netbalanceCard.textContent = `Amount: Ksh. ${selectedTMSum ? selectedTMSum.net_balance : 0}`;
+                });
+            })
+            .catch(error => console.error('Error fetching new TM options with sum:', error));
           });
-      </script>
-      
+
+        </script>
 
     </body>
 </html>
