@@ -42,7 +42,7 @@ worksheet_targets = gc.open_by_url(url_targ).worksheet("targets")
 # cursor.execute('create TABLE production("TRANSACTION DATE" datetime, "BRANCH", "INTERMEDIARY TYPE", "INTERMEDIARY", "PRODUCT", "PORTFOLIO MIX", "SALES TYPE" num, "SUM INSURED" num, "GROSS PREMIUM" num, "NET BALANCE" num, "RECEIPTS" num, "NEW TM", "MONTH NAME", "DayOfWeek")')
 # cursor.execute('create TABLE current_month("TRANSACTION DATE" datetime, "BRANCH", "INTERMEDIARY TYPE", "INTERMEDIARY", "PRODUCT", "PORTFOLIO MIX", "SALES TYPE" num, "SUM INSURED" num, "GROSS PREMIUM" num, "NET BALANCE" num, "RECEIPTS" num, "NEW TM", "MONTH NAME", "DayOfWeek")')
 # cursor.execute('create TABLE current_week("TRANSACTION DATE" datetime, "BRANCH", "INTERMEDIARY TYPE", "INTERMEDIARY", "PRODUCT", "PORTFOLIO MIX", "SALES TYPE" num, "SUM INSURED" num, "GROSS PREMIUM" num, "NET BALANCE" num, "RECEIPTS" num, "NEW TM", "MONTH NAME", "DayOfWeek")')
-
+# cursor.execute('create TABLE yesterday("TRANSACTION DATE" datetime, "BRANCH", "INTERMEDIARY TYPE", "INTERMEDIARY", "PRODUCT", "PORTFOLIO MIX", "SALES TYPE" num, "SUM INSURED" num, "GROSS PREMIUM" num, "NET BALANCE" num, "RECEIPTS" num, "NEW TM", "MONTH NAME", "DayOfWeek")')
 
     
 
@@ -197,42 +197,50 @@ def tms():
 def get_new_tm_options_with_sum():
     connection = sqlite3.connect("dashboard.db")
     cursor = connection.cursor()
+    cursor2 = connection.cursor()
+    cursor3 = connection.cursor()
 
-    # Execute the query using parameter binding
+    # Execute the first query using parameter binding(current month)
     query = """
         SELECT [NEW TM], SUM([GROSS PREMIUM]), SUM(CASE WHEN [RECEIPTS] > 0 THEN [RECEIPTS] ELSE 0 END), SUM(CASE WHEN [NET BALANCE] > 0 THEN [NET BALANCE] ELSE 0 END)
         FROM current_month
         GROUP BY [NEW TM];
     """
 
-    cursor.execute(query)
-
-    # Fetch the results or perform further operations as needed
-    new_tm_data = cursor.fetchall()
-
-    cursor2 = connection.cursor()
-
-    # Execute the query using parameter binding
-    query = """
+    # Execute the second query using parameter binding(current week)
+    query2 = """
         SELECT [NEW TM], SUM([GROSS PREMIUM]), SUM(CASE WHEN [RECEIPTS] > 0 THEN [RECEIPTS] ELSE 0 END), SUM(CASE WHEN [NET BALANCE] > 0 THEN [NET BALANCE] ELSE 0 END)
         FROM current_week
         GROUP BY [NEW TM];
     """
 
-    cursor2.execute(query)
+    # Execute the third query using parameter binding(yesterday)
+    query3 = """
+        SELECT [NEW TM], SUM([GROSS PREMIUM]), SUM(CASE WHEN [RECEIPTS] > 0 THEN [RECEIPTS] ELSE 0 END), SUM(CASE WHEN [NET BALANCE] > 0 THEN [NET BALANCE] ELSE 0 END)
+        FROM yesterday
+        GROUP BY [NEW TM];
+    """
+
+
+    cursor.execute(query)
+    cursor2.execute(query2)
+    cursor3.execute(query3)
 
     # Fetch the results or perform further operations as needed
+    new_tm_data = cursor.fetchall()    
     week_tm_data = cursor2.fetchall()
+    yesterday_data = cursor3.fetchall()
 
     connection.close()
 
-    # Convert the fetched data into a list of dictionaries
-    
+    # Convert the fetched data into a list of dictionaries    
     new_tm_options_with_sum = [{'new_tm': row[0], 'gross_premium_sum': row[1], 'receipts_sum': row[2], 'net_balance': row[3]} for row in new_tm_data]
-    # Convert the fetched data into a list of dictionaries for current_week
+   
     new_tm_options_with_sum_week = [{'new_tm': row[0], 'week_gross_premium_sum': row[1], 'week_receipts_sum': row[2], 'week_net_balance': row[3]} for row in week_tm_data]
- 
-    return jsonify({'new_tm_options_with_sum': new_tm_options_with_sum, 'new_tm_options_with_sum_week':new_tm_options_with_sum_week})
+    
+    new_tm_options_with_sum_yesterday = [{'new_tm': row[0], 'yesterday_gross_premium_sum': row[1], 'yesterday_receipts_sum': row[2], 'yesterday_net_balance': row[3]} for row in yesterday_data]
+
+    return jsonify({'new_tm_options_with_sum': new_tm_options_with_sum, 'new_tm_options_with_sum_week':new_tm_options_with_sum_week, 'new_tm_options_with_sum_yesterday':new_tm_options_with_sum_yesterday})
     
 
             
@@ -275,6 +283,7 @@ def process_uploaded_file(file_path):
     newdf = jointdf.dropna(subset='TRANSACTION DATE').copy()
     current_month_data = newdf[newdf['MONTH NAME'] == current_month_name]
     this_week = newdf.loc[((newdf['TRANSACTION DATE']).dt.date >= start_of_week.date()) & ((newdf['TRANSACTION DATE']).dt.date <= end_of_week.date())].copy()
+    most_recent_date = newdf[newdf['TRANSACTION DATE'] == newdf['TRANSACTION DATE'].max()].copy()
 
     
     # Push DataFrame to the database
@@ -283,7 +292,7 @@ def process_uploaded_file(file_path):
     newdf.to_sql('production', connection, if_exists='replace', index=False)
     current_month_data.to_sql('current_month', connection, if_exists='replace', index=False)
     this_week.to_sql('current_week', connection, if_exists='replace', index=False)
-
+    most_recent_date.to_sql('yesterday', connection, if_exists='replace', index=False)
 
     query = "SELECT * FROM production"
     db_df = pd.read_sql_query(query, connection)
