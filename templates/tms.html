@@ -95,7 +95,7 @@
                    <div class="card-body">
                      <h5 class="card-title">Week To Date</h5>
                      <h6 class="card-title">Production</h6>
-                     <p class="card-text">Amount: </p>
+                     <p id="weekgrossPremiumCard" class="card-text">Amount: </p>
                      <p class="card-text">Number of Policies: </p> 
                    </div>
                  </div>
@@ -105,7 +105,7 @@
                    <div class="card-body">
                      <h5 class="card-title">Week To Date</h5>
                      <h6 class="card-title">Receipted</h6>
-                     <p class="card-text">Amount: </p>
+                     <p id="weekreceiptsCard" class="card-text">Amount: </p>
                      <p class="card-text">Number of Policies: </p> 
                    </div>
                  </div>
@@ -115,7 +115,7 @@
                    <div class="card-body">
                      <h5 class="card-title">Week To Date</h5>
                      <h6 class="card-title">On Credit</h6>
-                     <p class="card-text">Amount: </p>
+                     <p id="weeknetbalanceCard" class="card-text">Amount: </p>
                      <p class="card-text">Number of Policies: </p> 
                    </div>
                  </div>
@@ -161,6 +161,9 @@
         const grossPremiumCard = document.getElementById('grossPremiumCard');
         const receiptsCard = document.getElementById('receiptsCard');
         const netbalanceCard = document.getElementById('netbalanceCard');
+        const weekgrossPremiumCard = document.getElementById('weekgrossPremiumCard');
+        const weekreceiptsCard = document.getElementById('weekreceiptsCard');
+        const weeknetbalanceCard = document.getElementById('weeknetbalanceCard');
 
 
         // Fetch new TM options with their gross premium and receipts sums
@@ -181,11 +184,16 @@
 
                     // Find the selected TM in the fetched data
                     const selectedTMSum = data.new_tm_options_with_sum.find(option => option.new_tm === selectedTM);
+                    const selectedTMSumWeek = data.new_tm_options_with_sum_week.find(option => option.new_tm === selectedTM);
+
 
                     // Update the content of the card with the fetched sums
                     grossPremiumCard.textContent = `Amount: Ksh. ${selectedTMSum ? selectedTMSum.gross_premium_sum : 0}`;
                     receiptsCard.textContent = `Amount: Ksh. ${selectedTMSum ? selectedTMSum.receipts_sum : 0}`;
                     netbalanceCard.textContent = `Amount: Ksh. ${selectedTMSum ? selectedTMSum.net_balance : 0}`;
+                    weekgrossPremiumCard.textContent = `Amount: Ksh. ${selectedTMSumWeek ? selectedTMSumWeek.week_gross_premium_sum : 0}`;
+                    weekreceiptsCard.textContent = `Amount: Ksh. ${selectedTMSumWeek ? selectedTMSumWeek.week_receipts_sum : 0}`;
+                    weeknetbalanceCard.textContent = `Amount: Ksh. ${selectedTMSumWeek ? selectedTMSumWeek.week_net_balance : 0}`;
                 });
             })
             .catch(error => console.error('Error fetching new TM options with sum:', error));
