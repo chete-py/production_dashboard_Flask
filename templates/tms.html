@@ -20,6 +20,9 @@
             <img src="/static/corplogo.PNG" style="border-radius: 50%;" width="30" height="24" class="d-inline-block align-text-top">
             Production Analytics Dashboard
         </a>
+        <button class="btn btn-primary">        
+          <a style="color: white;  text-decoration: none;"  href="{{url_for('login')}}">Log Out</a>
+        </button>
         </div>
     </nav>
 
@@ -192,15 +195,15 @@
 
 
                     // Update the content of the card with the fetched sums
-                    grossPremiumCard.textContent = `Amount: Ksh. ${selectedTMSum ? selectedTMSum.gross_premium_sum : 0}`;
-                    receiptsCard.textContent = `Amount: Ksh. ${selectedTMSum ? selectedTMSum.receipts_sum : 0}`;
-                    netbalanceCard.textContent = `Amount: Ksh. ${selectedTMSum ? selectedTMSum.net_balance : 0}`;
-                    weekgrossPremiumCard.textContent = `Amount: Ksh. ${selectedTMSumWeek ? selectedTMSumWeek.week_gross_premium_sum : 0}`;
-                    weekreceiptsCard.textContent = `Amount: Ksh. ${selectedTMSumWeek ? selectedTMSumWeek.week_receipts_sum : 0}`;
-                    weeknetbalanceCard.textContent = `Amount: Ksh. ${selectedTMSumWeek ? selectedTMSumWeek.week_net_balance : 0}`;
-                    yesterdaygrossPremiumCard.textContent = `Amount: Ksh. ${selectedTMSumYesterday ? selectedTMSumYesterday.yesterday_gross_premium_sum : 0}`;
-                    yesterdayreceiptsCard.textContent = `Amount: Ksh. ${selectedTMSumYesterday ? selectedTMSumYesterday.yesterday_receipts_sum : 0}`;
-                    yesterdaynetbalanceCard.textContent = `Amount: Ksh. ${selectedTMSumYesterday ? selectedTMSumYesterday.yesterday_net_balance : 0}`;
+                    grossPremiumCard.textContent = `Amount: Ksh. ${selectedTMSum ? Math.round(selectedTMSum.gross_premium_sum).toLocaleString() : 0}`;
+                    receiptsCard.textContent = `Amount: Ksh. ${selectedTMSum ? Math.round(selectedTMSum.receipts_sum).toLocaleString() : 0}`;
+                    netbalanceCard.textContent = `Amount: Ksh. ${selectedTMSum ? Math.round(selectedTMSum.net_balance).toLocaleString() : 0}`;
+                    weekgrossPremiumCard.textContent = `Amount: Ksh. ${selectedTMSumWeek ? Math.round(selectedTMSumWeek.week_gross_premium_sum).toLocaleString() : 0}`;
+                    weekreceiptsCard.textContent = `Amount: Ksh. ${selectedTMSumWeek ? Math.round(selectedTMSumWeek.week_receipts_sum).toLocaleString() : 0}`;
+                    weeknetbalanceCard.textContent = `Amount: Ksh. ${selectedTMSumWeek ? Math.round(selectedTMSumWeek.week_net_balance).toLocaleString() : 0}`;
+                    yesterdaygrossPremiumCard.textContent = `Amount: Ksh. ${selectedTMSumYesterday ? Math.round(selectedTMSumYesterday.yesterday_gross_premium_sum).toLocaleString() : 0}`;
+                    yesterdayreceiptsCard.textContent = `Amount: Ksh. ${selectedTMSumYesterday ? Math.round(selectedTMSumYesterday.yesterday_receipts_sum).toLocaleString() : 0}`;
+                    yesterdaynetbalanceCard.textContent = `Amount: Ksh. ${selectedTMSumYesterday ? Math.round(selectedTMSumYesterday.yesterday_net_balance).toLocaleString() : 0}`;
                 });
             })
             .catch(error => console.error('Error fetching new TM options with sum:', error));
