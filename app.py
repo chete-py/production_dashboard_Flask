@@ -4,10 +4,11 @@ import sqlite3
 import string
 from datetime import datetime, timedelta
 import random
-import matplotlib.pyplot as plt
 from google.oauth2 import service_account
+import plotly.express as px
 from datetime import timedelta
-import mpld3
+from jinja2 import Template
+import plotly.graph_objects as go
 from flask import Flask, render_template, request, session, redirect, url_for , flash, jsonify
 from flask_mail import Mail, Message
 
@@ -176,16 +177,21 @@ def reset_request():
     return render_template('reset_request.html')
 
 
+
 @app.route("/home")
 def home():
+    tms_url = url_for('tms')
+    print(f'The URL for the "tms" route is: {tms_url}')
+
     # Retrieve the uploaded file path from the session
     file_path = session.get('uploaded_file_path', None)
-
+    
     if file_path:
-        df,bar_df, image_base64, week_gp, week_receipted, week_credit, month_gp, month_receipted, month_credit, yp, yr, yc = process_uploaded_file(file_path)
-        return render_template('home.html', df=df, bar_df=bar_df, image_base64=image_base64, data=df, week_gp=week_gp, week_receipted=week_receipted, week_credit=week_credit, month_gp=month_gp, month_receipted=month_receipted, month_credit=month_credit, yp=yp, yc=yc, yr=yr)
+        df,bar_df, fig, plotly_html, tms_url, week_receipted, week_credit, month_gp, month_receipted, month_credit, yp, yr, yc = process_uploaded_file(file_path)
+        return render_template('home.html', tms_url=tms_url , plotly_html=plotly_html, fig=fig, df=df, bar_df=bar_df, data=df, week_receipted=week_receipted, week_credit=week_credit, month_gp=month_gp, month_receipted=month_receipted, month_credit=month_credit, yp=yp, yc=yc, yr=yr)
     else:
         return 'No uploaded file found.'
+
 
 
 @app.route("/tms")
@@ -379,21 +385,38 @@ def process_uploaded_file(file_path):
     unique_manager = db_df['NEW TM'].unique().tolist()
 
     bar_df = db_df.groupby('MONTH NAME')['GROSS PREMIUM'].sum().reset_index()
-  
-    fig, ax = plt.subplots(figsize=(10,6))
-    ax.bar(bar_df['MONTH NAME'], bar_df['GROSS PREMIUM'], color='#00A550',)
-    ax.set_xlabel('Month')
-    ax.set_title('MONTHLY GROSS UNDERWRITTEN PREMIUM')
-   
-    # Convert the Matplotlib plot to HTML
-    image_base64 = mpld3.fig_to_html(fig)
+
+    fig = px.bar(bar_df, x='MONTH NAME', y='GROSS PREMIUM')
+
+    fig.update_layout(title={'text': '2024 AGGREGATE GWP', 'x': 0.5, 'xanchor': 'center'}, plot_bgcolor='white', xaxis=dict(categoryorder='array', categoryarray=["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"], tickfont=dict(size=10))) 
+                
     
+    fig.update_xaxes(showgrid=False)
+    fig.update_yaxes(showgrid=False)
+    
+    # Paths
+    output_html_path = "templates/output.html"
+    input_template_path = "templates/home.html"
+
+    plotly_html = fig.to_html(full_html=True)
+
+    # Data for Jinja rendering
+    plotly_jinja_data = {"fig": plotly_html}
+
+    
+    # Data for Jinja rendering
+    plotly_jinja_data = {"fig": fig.to_html(full_html=False)}
+
+    # Jinja rendering
+    with open(output_html_path, "w", encoding="utf-8") as output_file:
+        with open(input_template_path) as template_file:
+            j2_template = Template(template_file.read())
+            output_file.write(j2_template.render(plotly_jinja_data))
+                
     session['unique_manager'] = unique_manager
     
     df = df2.to_dict(orient='records')
-    return df, bar_df, image_base64, week_gp, week_receipted, week_credit, month_gp, month_receipted, month_credit, yp, yc, yr
-
-
+    return df, bar_df, plotly_html, week_gp, fig, week_receipted, week_credit, month_gp, month_receipted, month_credit, yp, yc, yr
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
