@@ -199,6 +199,12 @@ def tms():
     return render_template('tms.html')
 
 
+@app.route("/intermediary")
+def intermediary():
+    return render_template('intermediary.html')
+
+
+
 @app.route('/get_new_tm_options_with_sum')
 def get_new_tm_options_with_sum():
     connection = sqlite3.connect("dashboard.db")
