@@ -180,19 +180,17 @@ def reset_request():
 
 @app.route("/home")
 def home():
-    tms_url = url_for('tms')
-    print(f'The URL for the "tms" route is: {tms_url}')
-
+    
     # Retrieve the uploaded file path from the session
     file_path = session.get('uploaded_file_path', None)
-    
+
     if file_path:
-        df,bar_df, fig, plotly_html, tms_url, week_receipted, week_credit, month_gp, month_receipted, month_credit, yp, yr, yc = process_uploaded_file(file_path)
-        return render_template('home.html', tms_url=tms_url , plotly_html=plotly_html, fig=fig, df=df, bar_df=bar_df, data=df, week_receipted=week_receipted, week_credit=week_credit, month_gp=month_gp, month_receipted=month_receipted, month_credit=month_credit, yp=yp, yc=yc, yr=yr)
+        fig, plotly_html, week_receipted, week_credit, month_gp, month_receipted, month_credit, yp, yr, yc = process_uploaded_file(file_path)
+        return render_template('home.html', plotly_html=plotly_html, fig=fig, week_receipted=week_receipted, week_credit=week_credit, month_gp=month_gp, month_receipted=month_receipted, month_credit=month_credit, yp=yp, yc=yc, yr=yr)
     else:
         return 'No uploaded file found.'
 
-
+    
 
 @app.route("/tms")
 def tms():
@@ -201,8 +199,12 @@ def tms():
 
 @app.route("/intermediary")
 def intermediary():
-    return render_template('intermediary.html')
-
+    # Retrieve the uploaded file path from the session
+    file_path = session.get('uploaded_file_path', None)
+    if file_path:
+        broker_output_list = process_brokers(file_path)
+        
+        return render_template('intermediary.html', broker_output_list=broker_output_list)
 
 
 @app.route('/get_new_tm_options_with_sum')
@@ -255,9 +257,27 @@ def get_new_tm_options_with_sum():
     return jsonify({'new_tm_options_with_sum': new_tm_options_with_sum, 'new_tm_options_with_sum_week':new_tm_options_with_sum_week, 'new_tm_options_with_sum_yesterday':new_tm_options_with_sum_yesterday})
     
 
-            
-def process_uploaded_file(file_path):
+
+def process_brokers(file_path):
+
+    # Store the file path in a session variable
+    session['uploaded_file_path'] = file_path
+
+    connection = sqlite3.connect("dashboard.db")
+    query = "SELECT * FROM production"
+    db_df = pd.read_sql_query(query, connection)
     
+    # Intermediaries
+    brokers = db_df[db_df['INTERMEDIARY'].str.contains('BROKER')]
+    broker_grouped = brokers.groupby('INTERMEDIARY')['GROSS PREMIUM'].sum().reset_index()
+    broker_data = broker_grouped.sort_values(by='GROSS PREMIUM', ascending=False)
+    top_brokers = broker_data.head(10)
+    broker_output_list = top_brokers.to_dict(orient='records')
+
+    return broker_output_list
+    
+            
+def process_uploaded_file(file_path):    
     df = pd.read_excel(file_path, header=6)
     df2 = df[["TRANSACTION DATE", "BRANCH", "INTERMEDIARY TYPE", "INTERMEDIARY", "PRODUCT", "PORTFOLIO MIX", "SALES TYPE", "STAMP DUTY", "SUM INSURED", "GROSS PREMIUM", "NET BALANCE", "RECEIPTS", "TM"]].copy()
     df2.loc[df2['INTERMEDIARY'] == 'GWOKA INSURANCE AGENCY', 'BRANCH'] = 'Head Office'
@@ -309,6 +329,7 @@ def process_uploaded_file(file_path):
     query = "SELECT * FROM production"
     db_df = pd.read_sql_query(query, connection)
     db_df['TRANSACTION DATE'] = pd.to_datetime(db_df['TRANSACTION DATE'])
+
     
     # THIS MONTH
     this_month = db_df.loc[db_df['MONTH NAME'] == current_month_name].copy()
@@ -387,8 +408,11 @@ def process_uploaded_file(file_path):
     yr = "Ksh. {:,.0f}".format(yesterday_receipts_total)    
     yc = "Ksh. {:,.0f}".format(yesterday_credit_total)  
     
-
+    
     unique_manager = db_df['NEW TM'].unique().tolist()
+
+    session['unique_manager'] = unique_manager
+
 
     bar_df = db_df.groupby('MONTH NAME')['GROSS PREMIUM'].sum().reset_index()
 
@@ -396,10 +420,6 @@ def process_uploaded_file(file_path):
 
     fig.update_layout(title={'text': '2024 AGGREGATE GWP', 'x': 0.5, 'xanchor': 'center'}, plot_bgcolor='white', xaxis=dict(categoryorder='array', categoryarray=["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"], tickfont=dict(size=10))) 
                 
-    
-    fig.update_xaxes(showgrid=False)
-    fig.update_yaxes(showgrid=False)
-    
     # Paths
     output_html_path = "templates/output.html"
     input_template_path = "templates/home.html"
@@ -417,12 +437,9 @@ def process_uploaded_file(file_path):
     with open(output_html_path, "w", encoding="utf-8") as output_file:
         with open(input_template_path) as template_file:
             j2_template = Template(template_file.read())
-            output_file.write(j2_template.render(plotly_jinja_data))
-                
-    session['unique_manager'] = unique_manager
+            output_file.write(j2_template.render(plotly_jinja_data))              
     
-    df = df2.to_dict(orient='records')
-    return df, bar_df, plotly_html, week_gp, fig, week_receipted, week_credit, month_gp, month_receipted, month_credit, yp, yc, yr
+    return plotly_html,  fig, week_receipted, week_credit, month_gp, month_receipted, month_credit, yp, yc, yr
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
