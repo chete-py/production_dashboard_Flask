@@ -48,31 +48,61 @@
                 </ul>
 
                
-            </div>  
-            
-            <table class="table table-bordered border-black table-sm">
-                <thead>
-                    <tr>
-                        <th>BROKER</th>
-                        <th>TOTAL GROSS PREMIUM</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    
-                    {% for broker in broker_output_list %}
-                        <div>
-                            <tr>
-                                <td>{{ broker['INTERMEDIARY'] }}</td>
-                                <td>Ksh. {{'{:,.0f}'.format( broker['GROSS PREMIUM'] | int) }}</td>
-                            </tr>                            
-                        </div>
-                    {% endfor %}
-                    
-                </tbody>
-            </table>
-         
+        </div>  
+    
+
+    
+
+        <p style="margin: 0.5% 0.5% 0%; padding: 1%;" ><u>TOP 10 BROKERS BY GROSS PREMIUM IN 2024</u></p>
+
+        <table class="table table-bordered border-black table-sm" style="margin: 0.5%; padding: 0.5%;">
+            <thead>
+                <tr>
+                    <th>BROKER</th>
+                    <th>TOTAL GROSS PREMIUM</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                {% for broker in broker_output_list %}
+                    <div>
+                        <tr>
+                            <td>{{ broker['INTERMEDIARY'] }}</td>
+                            <td>Ksh. {{'{:,.0f}'.format( broker['GROSS PREMIUM'] | int) }}</td>
+                        </tr>                            
+                    </div>
+                {% endfor %}
+                
+            </tbody>
+        </table>
 
 
+        <p style="margin: 0.5% 0.5% 0%; padding: 1%;" ><u>TOP 10 AGENCIES BY GROSS PREMIUM IN 2024</u></p>
+
+        <table class="table table-bordered border-black table-sm" style="margin: 0.5%; padding: 0.5%;">
+            <thead>
+                <tr>
+                    <th>AGENCY</th>
+                    <th>TOTAL GROSS PREMIUM</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                {% for agency in agency_output_list %}
+                    <div>
+                        <tr>
+                            <td>{{ agency['INTERMEDIARY'] }}</td>
+                            <td>Ksh. {{'{:,.0f}'.format( agency['GROSS PREMIUM'] | int) }}</td>
+                        </tr>                            
+                    </div>
+                {% endfor %}
+                
+            </tbody>
+        </table>
+
+      
+    
+    </div>    
 
 </body>
 </html>

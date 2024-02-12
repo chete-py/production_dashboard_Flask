@@ -202,9 +202,9 @@ def intermediary():
     # Retrieve the uploaded file path from the session
     file_path = session.get('uploaded_file_path', None)
     if file_path:
-        broker_output_list = process_brokers(file_path)
+        broker_output_list, agency_output_list = process_brokers(file_path)
         
-        return render_template('intermediary.html', broker_output_list=broker_output_list)
+        return render_template('intermediary.html', broker_output_list=broker_output_list, agency_output_list=agency_output_list)
 
 
 @app.route('/get_new_tm_options_with_sum')
@@ -268,13 +268,22 @@ def process_brokers(file_path):
     db_df = pd.read_sql_query(query, connection)
     
     # Intermediaries
+    # Brokers
     brokers = db_df[db_df['INTERMEDIARY'].str.contains('BROKER')]
     broker_grouped = brokers.groupby('INTERMEDIARY')['GROSS PREMIUM'].sum().reset_index()
     broker_data = broker_grouped.sort_values(by='GROSS PREMIUM', ascending=False)
     top_brokers = broker_data.head(10)
     broker_output_list = top_brokers.to_dict(orient='records')
 
-    return broker_output_list
+    # Agencies
+    agency = db_df[~db_df['INTERMEDIARY'].str.contains('BROKER|REINSURANCE|DIRECT')]
+    agency_grouped = agency.groupby('INTERMEDIARY')['GROSS PREMIUM'].sum().reset_index()
+    agency_data = agency_grouped.sort_values(by='GROSS PREMIUM', ascending=False)
+    top_agencies = agency_data.head(10)
+    agency_output_list = top_agencies.to_dict(orient='records')
+
+
+    return broker_output_list, agency_output_list
     
             
 def process_uploaded_file(file_path):    
