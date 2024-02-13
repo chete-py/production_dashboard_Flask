@@ -1,10 +1,8 @@
 import pandas as pd
-import gspread
 import sqlite3
 import string
 from datetime import datetime, timedelta
 import random
-from google.oauth2 import service_account
 import plotly.express as px
 from datetime import timedelta
 from jinja2 import Template
@@ -19,25 +17,23 @@ app = Flask(__name__)
 app.secret_key = 'PfdRs1999@A-402'
 
 
-# Define your Google Sheets credentials JSON file (replace with your own)
-credentials_path = 'keys.json'
+# # Define your Google Sheets credentials JSON file (replace with your own)
+# credentials_path = 'keys.json'
 
-# Authenticate with Google Sheets using the credentials
-credentials = service_account.Credentials.from_service_account_file(credentials_path, scopes=['https://spreadsheets.google.com/feeds'])
+# # Authenticate with Google Sheets using the credentials
+# credentials = service_account.Credentials.from_service_account_file(credentials_path, scopes=['https://spreadsheets.google.com/feeds'])
 
-# Authenticate with Google Sheets using gspread
-gc = gspread.authorize(credentials)
+# # Authenticate with Google Sheets using gspread
+# gc = gspread.authorize(credentials)
 
-# Your Google Sheets URL
-url_acc = "https://docs.google.com/spreadsheets/d/1yQXPZ4zdI8aiIzYXzzuAwDS1V_Zg0fWU6OaqZ_VmwB0/edit#gid=0"
-url_targ = "https://docs.google.com/spreadsheets/d/1yQXPZ4zdI8aiIzYXzzuAwDS1V_Zg0fWU6OaqZ_VmwB0/edit#gid=1885515628"
+# # Your Google Sheets URL
+# url_acc = "https://docs.google.com/spreadsheets/d/1yQXPZ4zdI8aiIzYXzzuAwDS1V_Zg0fWU6OaqZ_VmwB0/edit#gid=0"
+# url_targ = "https://docs.google.com/spreadsheets/d/1yQXPZ4zdI8aiIzYXzzuAwDS1V_Zg0fWU6OaqZ_VmwB0/edit#gid=1885515628"
 
-# Open the Google Sheets spreadsheet
-worksheet_accounts = gc.open_by_url(url_acc).worksheet("accounts")
-worksheet_targets = gc.open_by_url(url_targ).worksheet("targets") 
+# # Open the Google Sheets spreadsheet
+# worksheet_accounts = gc.open_by_url(url_acc).worksheet("accounts")
+# worksheet_targets = gc.open_by_url(url_targ).worksheet("targets") 
 
-# connection = sqlite3.connect("dashboard.db")
-# cursor = connection.cursor()
 
 # cursor.execute("create TABLE users(employee_number integer primary key, email text, password VARCHAR, name text, reset_token VARCHAR, reset_token_expiry DATETIME)")
 # cursor.execute('create TABLE production("TRANSACTION DATE" datetime, "BRANCH", "INTERMEDIARY TYPE", "INTERMEDIARY", "PRODUCT", "PORTFOLIO MIX", "SALES TYPE" num, "SUM INSURED" num, "GROSS PREMIUM" num, "NET BALANCE" num, "RECEIPTS" num, "NEW TM", "MONTH NAME", "DayOfWeek")')
@@ -311,25 +307,24 @@ def process_uploaded_file(file_path):
     start_of_week = current_date - timedelta(days=current_date.weekday())
     end_of_week = start_of_week + timedelta(days=6)
 
-    account_data = worksheet_accounts.get_all_values()
-    headers = account_data[0]
-    account_data = account_data[1:]
-    lastdf = pd.DataFrame(account_data, columns=headers)  # Convert data to a DataFrame
+      # Convert data to a DataFrame
     
-    
+    # Push DataFrame to the database
+    connection = sqlite3.connect("dashboard.db")
+    second_query = "SELECT * FROM agency_accounts"
+    lastdf = pd.read_sql_query(second_query, connection)
+    third_query = "SELECT * FROM lastyear"
+    plot_df = pd.read_sql_query(third_query, connection)
+ 
     jointdf = pd.merge(df2, lastdf, on='INTERMEDIARY', how='left')
     jointdf.loc[jointdf['INTERMEDIARY'].str.contains('REIN', case=False, na=False), 'NEW TM'] = 'REINSURANCE'
     jointdf = jointdf[["TRANSACTION DATE", "BRANCH", "INTERMEDIARY TYPE", "INTERMEDIARY", "PRODUCT", "PORTFOLIO MIX", "SALES TYPE", "SUM INSURED", "GROSS PREMIUM", "NET BALANCE", "RECEIPTS", "NEW TM", "MONTH NAME", "DayOfWeek"]].copy()
-    
     newdf = jointdf.dropna(subset='TRANSACTION DATE').copy()
     current_month_data = newdf[newdf['MONTH NAME'] == current_month_name]
     this_week = newdf.loc[((newdf['TRANSACTION DATE']).dt.date >= start_of_week.date()) & ((newdf['TRANSACTION DATE']).dt.date <= end_of_week.date())].copy()
     most_recent_date = newdf[newdf['TRANSACTION DATE'] == newdf['TRANSACTION DATE'].max()].copy()
 
-    
-    # Push DataFrame to the database
-    connection = sqlite3.connect("dashboard.db")
-    
+
     newdf.to_sql('production', connection, if_exists='replace', index=False)
     current_month_data.to_sql('current_month', connection, if_exists='replace', index=False)
     this_week.to_sql('current_week', connection, if_exists='replace', index=False)
@@ -337,6 +332,8 @@ def process_uploaded_file(file_path):
 
     query = "SELECT * FROM production"
     db_df = pd.read_sql_query(query, connection)
+   
+
     db_df['TRANSACTION DATE'] = pd.to_datetime(db_df['TRANSACTION DATE'])
 
     
@@ -425,10 +422,31 @@ def process_uploaded_file(file_path):
 
     bar_df = db_df.groupby('MONTH NAME')['GROSS PREMIUM'].sum().reset_index()
 
-    fig = px.bar(bar_df, x='MONTH NAME', y='GROSS PREMIUM')
+    fig = go.Figure()
 
-    fig.update_layout(title={'text': '2024 AGGREGATE GWP', 'x': 0.5, 'xanchor': 'center'}, plot_bgcolor='white', xaxis=dict(categoryorder='array', categoryarray=["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"], tickfont=dict(size=10))) 
+    fig.add_trace(go.Bar(
+            width= 0.425,
+            x= bar_df['MONTH NAME'],
+            y= bar_df['GROSS PREMIUM'],   
+            name = '2024',
+            marker_color="#00A550"
                 
+            ))               
+    
+    
+    fig.add_trace(go.Bar(
+            width= 0.425,
+            x= plot_df['MONTH NAME'],
+            y= plot_df['GROSS PREMIUM'], 
+            name = '2023',                                
+            marker_color="#FFA836"   
+            ))
+    
+
+    fig.update_layout(title={'text': '2023-2024 AGGREGATE GWP COMPARISON', 'x': 0.5, 'xanchor': 'center'},  plot_bgcolor='#f5f5f5', width=975, xaxis=dict(categoryorder='array', categoryarray=["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"], tickfont=dict(size=10))) 
+
+
+             
     # Paths
     output_html_path = "templates/output.html"
     input_template_path = "templates/home.html"
