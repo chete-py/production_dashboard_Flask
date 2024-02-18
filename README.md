@@ -1,5 +1,5 @@
 # Dashboard
-I recreated a dashboard I had earlier created with Streamlit but this time using Flask, HTML, CSS and a bit of JavaScript. <br>
+I recreated a dashboard I had earlier done with Streamlit but this time I used Flask, HTML, CSS and a bit of JavaScript. <br>
 
 ### Streamlit Dashboard
 
