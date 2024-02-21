@@ -102,10 +102,7 @@ def upload_file():
 
             # Store the file path in a session variable
             session['uploaded_file_path'] = file_path
-
-            # You might want to read the file into a DataFrame here
-            # df = pd.read_csv(file_path)
-
+            
             return redirect(url_for('home'))
 
     # Handle the GET request (render the upload form)
